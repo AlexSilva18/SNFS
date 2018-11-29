@@ -1,22 +1,18 @@
-CC = gcc
-FLAGS = -Wall -Werror -g -fsanitize=address -lasan -lpthread -c -o
-COMPILE = $(CC) $(FLAGS)
-HEADER = client.h server.h
-SERVOBJ = server.o
-CLIENTOBJ = client.o
+COMPILER = gcc
+FLAGS = -Wall -Werror -g -fsanitize=address -lasan -lpthread
+CLIENT_FILES = client.c
+SERVER_FILES = server.c
 
 default: client server
 
-server: $(SERVOBJ) Makefile $(HEADER)
-	$(COMPILE:-c=) serverSNFS $(SERVOBJ)
+client: $(CLIENT_FILES)
+	$(COMPILER) $(FLAGS) $(CLIENT_FILES) -o clientSNFS `pkg-config fuse --cflags --libs`
+	@echo 'To run: ./clientSNFS -f /tmp/hello'
+	@echo 'To unmount: fusermount -u /tmp/hello"'
+	@echo 'Make sure you create a hello directory in /tmp'
 
-client: $(CLIENTOBJ) Makefile $(HEADER)
-	$(COMPILE:-c=) clientSNFS $(CLIENTOBJ)
-
-#libnetfiles.o: libnetfiles.c
-
-%.o: %.c $(HEADER)
-	$(COMPILE) $@ $<
+server: $(SERVER_FILES)
+	$(COMPILER) $(FLAGS) $(SERVER_FILES) -o serverSNFS `pkg-config fuse --cflags --libs`
 
 clean:
 	rm -rf *~ *.o .*.swp "#*.c#" serverSNFS clientSNFS
@@ -25,4 +21,5 @@ runserv:
 	./serverSNFS
 
 runcli:
-	./clientSNFS #remainder arguments
+	./clientSNFS -f stuff
+
