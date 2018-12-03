@@ -22,6 +22,8 @@ struct dir_data {
    off_t offest;
 };
 
+int socket_fd;
+
 static int client_getattr(const char*, struct stat*);
 static int client_readdir(const char*, void*, fuse_fill_dir_t, off_t, struct fuse_file_info*);
 static int client_read(const char*, char*, size_t, off_t, struct fuse_file_info*);

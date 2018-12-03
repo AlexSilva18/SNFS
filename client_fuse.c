@@ -1,10 +1,11 @@
 #include "client_fuse.h"
+#include "socket.c"
 
 /* static struct file_info {
   const char *filename;
   const char *data;
   }finfo;*/
-
+extern int global_socket;
 static const char *hello_str = "Hello Worlds!\n";
 static const char *hello_path = "/tmp/hello";
 
@@ -15,36 +16,58 @@ static const char *hello_path = "/tmp/hello";
  */
 static int client_getattr( const char *path, struct stat *st){
   printf("[getattr] path == %s\n", path);
-  (void) path;
-  if (lstat(path, st) == -1)
-    return -errno;
-  return 0;
+  printf("global_socket: %d\n", global_socket);
+   
+  /* char *message = "hello!"; */
+  /* if(writeToServer(global_socket, message, strlen(message)) == -1) */
+  /*   return -1; */
   
-  /* int res = 0; */
-  
-  /* st->st_uid = getuid(); // user ID of the process invoking the operation */
-  /* st->st_gid = getgid(); // group ID of the process invoking the operation */
-  /* st->st_atime = time( NULL ); // The last access of the file/directory is right now */
-  /* st->st_mtime = time( NULL ); // The last modification of the file/directory is right now */
-  
-  /* memset(st, 0, sizeof(struct stat));; */
-  
-  /* if (strcmp(path, "/") == 0 ){ */
-  /*   st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits */
-  /*   st->st_nlink = 2;  */
+  /* char buff[50]; */
+  /* int nbytes; */
+  /* char *temp; */
+  /* char mess[20]; */
+  /* nbytes = read(global_socket, buff, 50); */
+  /* int i = 0; */
+  /* for( temp = buff; *temp != '&'; temp+=1){ */
+  /*   mess[i]= *temp; */
+  /*   ++i; */
   /* } */
-  /* //else if (strcmp(path+1, finfo.filename) == 0){ */
-  /* else if (strcmp(path, hello_path) == 0){ */
-  /*   st->st_mode = S_IFREG | 0444; */
-  /*   st->st_nlink = 1; */
-  /*   //st->st_size = strlen(finfo.data); */
-  /*   st->st_size = strlen(hello_str); */
-  /*   return 0; */
-  /* } */
-  /* else */
-  /*   res = -ENOENT; */
+  /* printf("\nnbytes = %d,  %s\n", nbytes, mess); */
+  /* printf("end\n"); */
+  /* (void) path; */
+  /* if (lstat(hello_path, st) == -1) */
+  /*   return -errno; */
 
-  /* return res; */
+  /* if(strcmp(path, "/tmp")){ */
+  /*   printf("FOUND TEMP\n"); */
+  /* } */
+  /* return 0; */
+  
+  int res = 0;
+  
+  st->st_uid = getuid(); // user ID of the process invoking the operation
+  st->st_gid = getgid(); // group ID of the process invoking the operation
+  st->st_atime = time( NULL ); // The last access of the file/directory is right now
+  st->st_mtime = time( NULL ); // The last modification of the file/directory is right now
+  
+  memset(st, 0, sizeof(struct stat));;
+  
+  if (strcmp(path, "/") == 0 ){
+    st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
+    st->st_nlink = 2;
+  }
+  //else if (strcmp(path+1, finfo.filename) == 0){
+  else if (strcmp(path, hello_path) == 0){
+    st->st_mode = S_IFREG | 0444;
+    st->st_nlink = 1;
+    //st->st_size = strlen(finfo.data);
+    st->st_size = strlen(hello_str);
+    return 0;
+  }
+  else
+    res = -ENOENT;
+
+  return res;
 }
 
 /** shows the files and directories that reside in a specific directory (ls)
@@ -58,45 +81,45 @@ static int client_getattr( const char *path, struct stat *st){
 static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
   printf("[readdir] path == %s\n", path);
   
-  (void) offset;
-  (void) fi;
-  DIR *dir = opendir(path);
-  struct dirent *read;
-  if (dir == NULL){
-    closedir(dir);
-    return -errno;
-  }
-  while ((read = readdir(dir)) != NULL){
-    if (strcmp( path, "/" ) == 0 ) {
-      //printf("step1");
-      if (strcmp(read->d_name, ".") == 0){
-	filler(buffer, ".", NULL, 0); // Current Directory
-	continue;
-      }
-      else if (strcmp(read->d_name, "..") == 0){
-	filler(buffer, "..", NULL, 0); // Parent Directory
-	continue;
-      }
-    }
-    struct stat st;
-    memset(&st, 0, sizeof(st));
-    st.st_ino = read->d_ino;
-    st.st_mode = read->d_type << 12;
-    if(filler(buffer, read->d_name, &st, 0))
-      break;
-  }
-  // If the user is trying to show the files/directories of the root directory show the following
-  /* if ( strcmp( path, "/" ) == 0 ) { */
-    
-    /* filler(buffer, ".", NULL, 0); // Current Directory */
-    /* filler(buffer, "..", NULL, 0); // Parent Directory */
-    /* filler(buffer, hello_path + 1, NULL, 0); */
-  /*   /\* filler( buffer, "file1", NULL, 0 ); *\/ */
-  /*   /\* filler( buffer, "file2", NULL, 0 ); *\/ */
+  /* (void) offset; */
+  /* (void) fi; */
+  /* DIR *dir = opendir(path); */
+  /* struct dirent *read; */
+  /* if (dir == NULL){ */
+  /*   closedir(dir); */
+  /*   return -errno; */
   /* } */
-  /* else */
-  /*   return -ENOENT; */
-  closedir(dir);
+  /* while ((read = readdir(dir)) != NULL){ */
+  /*   if (strcmp( path, "/" ) == 0 ) { */
+  /*     //printf("step1"); */
+  /*     if (strcmp(read->d_name, ".") == 0){ */
+  /* 	filler(buffer, ".", NULL, 0); // Current Directory */
+  /* 	continue; */
+  /*     } */
+  /*     else if (strcmp(read->d_name, "..") == 0){ */
+  /* 	filler(buffer, "..", NULL, 0); // Parent Directory */
+  /* 	continue; */
+  /*     } */
+  /*   } */
+  /*   struct stat st; */
+  /*   memset(&st, 0, sizeof(st)); */
+  /*   st.st_ino = read->d_ino; */
+  /*   st.st_mode = read->d_type << 12; */
+  /*   if(filler(buffer, read->d_name, &st, 0)) */
+  /*     break; */
+  /* } */
+  // If the user is trying to show the files/directories of the root directory show the following
+  if ( strcmp( path, "/" ) == 0 ) {
+    
+    filler(buffer, ".", NULL, 0); // Current Directory
+    filler(buffer, "..", NULL, 0); // Parent Directory
+    filler(buffer, hello_path + 1, NULL, 0);
+    /* filler( buffer, "file1", NULL, 0 ); */
+    /* filler( buffer, "file2", NULL, 0 ); */
+  }
+  else
+    return -ENOENT;
+  /* closedir(dir); */
   return 0;
 }
 
@@ -197,10 +220,10 @@ static int client_flush(const char *path, struct fuse_file_info *fi){
 }
 static int client_mkdir(const char *path, mode_t mode){
   printf("[mkdir] path == %s\n", path);
-  if(mkdir(path, mode) == -1){
-    printf("MKDIR Failed!\n");
-    return -ENOENT;
-  }
+  /* if(mkdir(path, mode) == -1){ */
+  /*   printf("MKDIR Failed!\n"); */
+  /*   return -ENOENT; */
+  /* } */
   
   return 0;
 }

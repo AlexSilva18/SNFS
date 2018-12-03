@@ -18,8 +18,8 @@ clean:
 	rm -rf *~ *.o .*.swp "#*.c#" serverSNFS clientSNFS
 
 runserv:
-	./serverSNFS
+	./serverSNFS -port 53243 -mount ./serverDir
 
 runcli:
-	./clientSNFS -f stuff
+	./clientSNFS -port 53243 -hostname localhost -mount /tmp/hello -f
 
