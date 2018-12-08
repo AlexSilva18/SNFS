@@ -3,13 +3,13 @@
 #include "client.h"
 
 int main( int argc, char *argv[] ){  
-  int fuse_argc = 1;
+  int fuse_argc = 2;
   char *fuse_argv[60];
   //char **temp = (char**)malloc(sizeof(char*)*sizeof(argv));
   
   if(argc == 7 || argc == 8){
     fuse_argv[0] = argv[0];
-    if (argv[7] != NULL && strcmp(argv[7], "-f")){
+    if (argv[7] != NULL && strcmp(argv[7], "-f") == 0){
       fuse_argv[1] = argv[7];
       fuse_argv[2] = argv[6];
       fuse_argc = 3;
@@ -32,11 +32,12 @@ int main( int argc, char *argv[] ){
   printf("Socket Init Completed\n");
 
   int socket_fd;
-  if((socket_fd = connectToServer()) == -1)
+  if((socket_fd = connectToServer()) == -1){
+    fprintf(stderr, "[ERROR]: Unable to connet to server\n");
     return -1;
+  }
 
   global_socket = socket_fd;
-  
   /* int fd = socketOpen(pathname); */
   /* if(fd == -1){ */
   /*   fprintf(stderr, "[ERROR]: File Descriptor not found\n"); */

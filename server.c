@@ -2,15 +2,17 @@
 #include "socket.c"
 #include <pthread.h>
 
-
 int main(int argc, char* argv[]){
   int socket_fd;
   struct addrinfo hints, *res, *r;
   struct sockaddr_storage client_addr;
+  //struct threadinput *input;
   socklen_t client_addr_len;
   int rc, err, connection_id;
+  char buff[50];
+  //  pthread_t tid;
   
-  char buff[1024];
+  //char buff[1024];
   
   if(argc != 5){
     fprintf(stderr, "[ERROR]: Invalid number of arguments.\n");
@@ -79,6 +81,14 @@ int main(int argc, char* argv[]){
     sprintf(string, "confirmed message: %s%c",buff, nullb); 
     if(writeToServer(connection_id, string, strlen(string)) == -1)
       return -1;
+    /* input = malloc(sizeof(struct threadinput)); */
+    /* input->clientaddr = client_addr; */
+    /* input->socket_fd = connection_id; */
+    
+    /* printf("New Thread Created\n"); */
+    /* pthread_create(&tid, NULL, threadInit, input); */
+    /* printf("Detach\n"); */
+    /* pthread_detach(tid); */
   }
   close(socket_fd); 
 
@@ -111,4 +121,60 @@ int getFlag(char* inputFlags[], inputStream *stream){
   if (i != 4)
     return -1;
   return 0;
+}
+
+void * threadInit(void * args){
+  int socket_fd = ((struct threadinput*) args)->socket_fd;
+  printf("socket_fd: %d\n", socket_fd);
+  char buff[1024];
+  printf("Child Thread\n");
+  
+  /* while(1){ */
+  read(socket_fd, buff, 50);
+  printf("nbytes: %zu, %s\n", strlen(buff), buff);
+  printf("New Thread Created\n");
+  switch(buff[0]){
+  case 'g':
+    // do_getattr()
+    break;
+  case 'e':
+    // do_readdir()
+    break;
+  case 'r':
+    // do_read()
+    break;
+  case 'c':
+    // do_create
+    break;
+  case 'o':
+    // do_open
+    break;
+  case 'w':
+    // do_write
+    break;
+  case 'f':
+    // do_flush
+    break;
+  case 'm':
+    // do_mkdir
+    break;
+  case 't':
+    // do_trunkate
+    break;
+  case 'p':
+    // do_opendir
+    break;
+  case 'l':
+    // do_releasedir
+    break;
+  default:
+    fprintf(stderr, "[ERROR]: Invalid Command.\n");
+  }
+  return NULL;
+  /* } */
+  /* char string[30]; */
+  /* char nullb = '&'; */
+  /* sprintf(string, "conf: %s%c",buff, nullb);  */
+  /* if(writeToServer(connection_id, string, strlen(string)) == -1) */
+  /*   return -1; */
 }

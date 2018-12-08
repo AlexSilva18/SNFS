@@ -4,10 +4,11 @@
 /* static struct file_info {
   const char *filename;
   const char *data;
-  }finfo;*/
+  }finfo;
+*/
 extern int global_socket;
 static const char *hello_str = "Hello Worlds!\n";
-static const char *hello_path = "/tmp/hello";
+static const char *hello_path = "/tmp/hello1";
 
 /** gets attributes from file
  * @param const char* path, path of the file which the system asked for its attributes
@@ -17,23 +18,28 @@ static const char *hello_path = "/tmp/hello";
 static int client_getattr( const char *path, struct stat *st){
   printf("[getattr] path == %s\n", path);
   printf("global_socket: %d\n", global_socket);
-   
-  /* char *message = "hello!"; */
-  /* if(writeToServer(global_socket, message, strlen(message)) == -1) */
+
+  /* char message[1024] = "gPATH"; */
+  /* //strcat(message, path); */
+  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
+  /*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
   /*   return -1; */
+  /* } */
   
-  /* char buff[50]; */
+  /* char buff[1024]; */
   /* int nbytes; */
   /* char *temp; */
-  /* char mess[20]; */
+  /* char mess[1024]; */
   /* nbytes = read(global_socket, buff, 50); */
   /* int i = 0; */
   /* for( temp = buff; *temp != '&'; temp+=1){ */
   /*   mess[i]= *temp; */
   /*   ++i; */
   /* } */
+  /* mess[i+1] = '\0'; */
   /* printf("\nnbytes = %d,  %s\n", nbytes, mess); */
   /* printf("end\n"); */
+
   /* (void) path; */
   /* if (lstat(hello_path, st) == -1) */
   /*   return -errno; */
@@ -56,8 +62,8 @@ static int client_getattr( const char *path, struct stat *st){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
     st->st_nlink = 2;
   }
-  //else if (strcmp(path+1, finfo.filename) == 0){
-  else if (strcmp(path, hello_path) == 0){
+  else if (strcmp(path+1, hello_path) == 0){
+  //else if (strcmp(path, hello_path) == 0){
     st->st_mode = S_IFREG | 0444;
     st->st_nlink = 1;
     //st->st_size = strlen(finfo.data);
@@ -109,17 +115,25 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
   /*     break; */
   /* } */
   // If the user is trying to show the files/directories of the root directory show the following
+  /* char *message = "message!"; */
+  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
+  /*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
+  /*   return -1; */
+  /* } */
+  (void) offset;
+  (void) fi;
+
   if ( strcmp( path, "/" ) == 0 ) {
-    
     filler(buffer, ".", NULL, 0); // Current Directory
     filler(buffer, "..", NULL, 0); // Parent Directory
-    filler(buffer, hello_path + 1, NULL, 0);
+    //filler(buffer, "hello1", NULL, 0);
     /* filler( buffer, "file1", NULL, 0 ); */
     /* filler( buffer, "file2", NULL, 0 ); */
   }
   else
     return -ENOENT;
   /* closedir(dir); */
+  printf("finish readdir\n");
   return 0;
 }
 
@@ -234,9 +248,10 @@ static int client_mkdir(const char *path, mode_t mode){
 /*   return 0; */
 /* } */
 static int client_releasedir(const char *path, struct fuse_file_info *fi){
-  struct dir_data *dir = (struct dir_data*) (uintptr_t) fi->fh;
+  //struct dir_data *dir = (struct dir_data*) (uintptr_t) fi->fh;
   (void) path;
-  closedir(dir->dp);
+  close(fi->fh);
+  //closedir(dir->dp);
   return 0;
 }
 

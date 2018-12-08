@@ -10,6 +10,12 @@ typedef struct {
   char *dirPath;
 }inputStream;
 
+struct threadinput{
+  struct sockaddr_storage clientaddr;
+  int socket_fd;
+};
+
+void *threadInit(void *);
 
 int getFlag(char**, inputStream*);
 
