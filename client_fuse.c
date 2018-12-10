@@ -18,13 +18,26 @@ static const char *hello_path = "/tmp/hello1";
 static int client_getattr( const char *path, struct stat *st){
   printf("[getattr] path == %s\n", path);
   printf("global_socket: %d\n", global_socket);
+  if(strncmp(path, "/.Trash", 7) == 0){
+      return -1;
+  }
+  char message[1024] = "g";
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  printf("message %s, length: %zu\n", message, strlen(message));
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
 
-  /* char message[1024] = "gPATH"; */
-  /* //strcat(message, path); */
-  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
-  /*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
-  /*   return -1; */
-  /* } */
+  char buff[1024];
+  ssize_t nbytes;
+  nbytes = read(global_socket, buff, 1024);
+  char server_path = buff[0];
+  printf("\nnbytes = %zu\n", nbytes);
+  printf("server_path: %c\n", server_path);
+  
   
   /* char buff[1024]; */
   /* int nbytes; */
@@ -58,20 +71,21 @@ static int client_getattr( const char *path, struct stat *st){
   
   memset(st, 0, sizeof(struct stat));;
   
-  if (strcmp(path, "/") == 0 ){
+  //if (strcmp(server_path, "/") == 0 ){
+  if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
     st->st_nlink = 2;
   }
-  else if (strcmp(path+1, hello_path) == 0){
-  //else if (strcmp(path, hello_path) == 0){
-    st->st_mode = S_IFREG | 0444;
+  else {
+    st->st_mode = S_IFREG | 0666;
     st->st_nlink = 1;
-    //st->st_size = strlen(finfo.data);
-    st->st_size = strlen(hello_str);
+    st->st_size = 1024;
+    //st->st_size = strlen(hello_str);
     return 0;
   }
-  else
-    res = -ENOENT;
+  //else if (strcmp(path+1, hello_path) == 0){
+  /* else */
+  /*   res = -ENOENT; */
 
   return res;
 }

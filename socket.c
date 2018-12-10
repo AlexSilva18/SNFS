@@ -127,7 +127,7 @@ int writeToServer(int socket_fd, char *str, int len){
     close(socket_fd);
     return -1;
   }
-  shutdown(socket_fd, SHUT_WR);
+  //shutdown(socket_fd, SHUT_WR);
   return 0;
 }
 

@@ -1,16 +1,17 @@
 #include "server.h"
 #include "socket.c"
+#include "server_ops.c"
 #include <pthread.h>
 
 int main(int argc, char* argv[]){
   int socket_fd;
   struct addrinfo hints, *res, *r;
   struct sockaddr_storage client_addr;
-  //struct threadinput *input;
+  struct threadinput *input;
   socklen_t client_addr_len;
   int rc, err, connection_id;
   char buff[50];
-  //  pthread_t tid;
+  pthread_t tid;
   
   //char buff[1024];
   
@@ -73,22 +74,23 @@ int main(int argc, char* argv[]){
     }
     else
       memset(buff, 0, sizeof(buff));
-    printf("Connection has been made\n");
-    read(connection_id, buff, 50);
-    printf("nbytes: %zu, %s\n", strlen(buff), buff);
-    char string[30];
-    char nullb = '&';
-    sprintf(string, "confirmed message: %s%c",buff, nullb); 
-    if(writeToServer(connection_id, string, strlen(string)) == -1)
-      return -1;
-    /* input = malloc(sizeof(struct threadinput)); */
-    /* input->clientaddr = client_addr; */
-    /* input->socket_fd = connection_id; */
-    
-    /* printf("New Thread Created\n"); */
-    /* pthread_create(&tid, NULL, threadInit, input); */
-    /* printf("Detach\n"); */
-    /* pthread_detach(tid); */
+    /* printf("Connection has been made\n"); */
+    /* read(connection_id, buff, 50); */
+    /* printf("nbytes: %zu, %s\n", strlen(buff), buff); */
+    /* char string[30]; */
+    /* char nullb = '&'; */
+    /* sprintf(string, "confirmed message: %s%c",buff, nullb);  */
+    /* if(writeToServer(connection_id, string, strlen(string)) == -1) */
+    /*   return -1; */
+    input = malloc(sizeof(struct threadinput));
+    input->clientaddr = client_addr;
+    input->socket_fd = connection_id;
+
+    //testing(connection_id);
+    printf("New Thread Created\n");
+    pthread_create(&tid, NULL, threadInit, input);
+    printf("Detach\n");
+    pthread_detach(tid);
   }
   close(socket_fd); 
 
@@ -126,16 +128,44 @@ int getFlag(char* inputFlags[], inputStream *stream){
 void * threadInit(void * args){
   int socket_fd = ((struct threadinput*) args)->socket_fd;
   printf("socket_fd: %d\n", socket_fd);
+  printf("Child Thread\n\n");
   char buff[1024];
-  printf("Child Thread\n");
-  
-  /* while(1){ */
-  read(socket_fd, buff, 50);
+  //char *buff = (char*)malloc(sizeof(char)*1024);
+  while(1){
+    printf("Awaiting new instructions\n");
+    ssize_t nbytes;
+    bzero(buff, 1024);
+    if((nbytes = read(socket_fd, buff, 1024)) == 0){
+      fprintf(stderr, "[Error], Unable to read\n");
+      //return;
+    }
   printf("nbytes: %zu, %s\n", strlen(buff), buff);
-  printf("New Thread Created\n");
-  switch(buff[0]){
+
+  char *temp = NULL;
+  char operation = buff[0];
+  printf("operation: %c\n", operation);
+  char path[1024];
+  bzero(path, 1024);
+  int i = 0;
+  
+  for(temp = buff; *temp != '&'; temp += 1){
+    if (i ==0){
+      i++;
+      continue;
+    }
+    //printf("temp: %c\n", *temp);
+    path[i-1] = *temp;
+    //printf("path: %c\n", *path);
+    i++;
+  }
+
+
+  printf("path: %s\n\n", path);
+  switch(operation){
   case 'g':
-    // do_getattr()
+    if (do_getattr(path, socket_fd) == -1)
+      fprintf(stderr, "[ERROR] Unable to get_attr");
+    memset(path, 0, sizeof(path));
     break;
   case 'e':
     // do_readdir()
@@ -170,11 +200,16 @@ void * threadInit(void * args){
   default:
     fprintf(stderr, "[ERROR]: Invalid Command.\n");
   }
+
+  printf("Resetting\n");
+  memset(buff, 0, strlen(buff));
+  /* strcpy(path, ""); */
+  /* strcpy(buff, ""); */
+  }
   return NULL;
-  /* } */
   /* char string[30]; */
   /* char nullb = '&'; */
-  /* sprintf(string, "conf: %s%c",buff, nullb);  */
+  /* sprintf(string, "conf: %s%c",buff, nullb); */
   /* if(writeToServer(connection_id, string, strlen(string)) == -1) */
   /*   return -1; */
 }

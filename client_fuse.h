@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 struct dir_data {
    DIR *dp;
