@@ -186,7 +186,7 @@ void * threadInit(void * args){
     // do_flush
     break;
   case 'm':
-    // do_mkdir
+    do_mkdir(path, socket_fd);
     break;
   case 't':
     // do_trunkate

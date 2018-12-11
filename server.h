@@ -15,8 +15,11 @@ struct threadinput{
   int socket_fd;
 };
 
-void *threadInit(void *);
-
 int getFlag(char**, inputStream*);
+void *threadInit(void *);
+int do_getattr(char*, int);
+void do_readdir(char*, int);
+void do_mkdir(char*, int);
+/* void do_mkdir(char*, mode_t, int); */
 
 #endif

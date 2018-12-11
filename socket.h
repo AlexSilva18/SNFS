@@ -15,6 +15,10 @@
 
 struct addrinfo hints, *res, *r;
 int mode;
+struct fuse_data {
+  const char *path;
+  const mode_t mode;
+};
 
 int socketInit(char*, char*);
 int socketOpen(const char*);
