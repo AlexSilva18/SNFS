@@ -7,6 +7,7 @@
   }finfo;
 */
 extern int global_socket;
+int mkdir_flag = 0;
 static const char *hello_str = "Hello Worlds!\n";
 static const char *hello_path = "/tmp/hello1";
 
@@ -83,20 +84,31 @@ static int client_getattr( const char *path, struct stat *st){
   //if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
     st->st_nlink = 2;
-    //printf("step1\n");
+    printf("step1\n");
     //return 0;
   }
   else if (strcmp(server_path, hello_path) == 0){
     st->st_mode = S_IFREG | 0666;
     st->st_nlink = 1;
     st->st_size = 1024;
-    //printf("step2\n");
+    printf("step2\n");
     //st->st_size = strlen(hello_str);
     return 0;
   }
   //else if (strcmp(path+1, hello_path) == 0){
-  else
+  else{
+    printf("step3\n");
+    //res = 0;
+    if(mkdir_flag == 1){
+      st->st_mode = S_IFDIR | 0755;
+      st->st_nlink = 1;
+      st->st_size = 1024;
+      printf("FLAG FOUND\n");
+      mkdir_flag = 0;
+      return res;
+    }
     res = -ENOENT;
+  }
 
   return res;
 }
@@ -261,40 +273,42 @@ static int client_mkdir(const char *path, mode_t mode){
   /* data->mode = mode; */
 
 
-  /* char message[1024] = "m"; */
-  /* strcat(message, path); */
-  /* int i = strlen(message); */
-  /* message[i] = '&'; */
-  /* //printf("message %s, length: %zu\n", message, strlen(message)); */
-  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
-  /*   fprintf(stderr, "[ERROR], [mkdir] unable to write to server\n"); */
-  /*   return -1; */
-  /* } */
-  
-  /* char buff[1024]; */
-  /* //ssize_t nbytes; */
-  /* read(global_socket, buff, 1024); */
-  /* if(strncmp(buff, "mkdir&", 6)){ */
-    
-  /*   if(sendto(global_socket, data, sizeof(*data), 0, (struct sockaddr*) &sin, sizeof(sin))) == -1) */
-  /*     fprintf(stderr, "[ERROR], couldn't send struct\n"); */
-  /* } */
-  /* char *temp = NULL; */
-  /* int j = 0; */
-  /* char server_path[1024]; */
-  /* for(temp = buff; *temp != '&'; temp += 1){ */
-  /*   //printf("temp: %c\n", *temp); */
-  /*   server_path[j] = *temp; */
-  /*   j++; */
-  /* } */
-
-  
-  if(mkdir(path, mode) == -1){
-    printf("MKDIR Failed!\n");
-    return -ENOENT;
+  char message[1024] = "m";
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  printf("message %s, length: %zu\n", message, strlen(message));
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [mkdir] unable to write to server\n");
+    return -1;
   }
   
-  return 0;
+  char buff[1024];
+  //ssize_t nbytes;
+  read(global_socket, buff, 1024);
+  char *temp = NULL;
+  int j = 0;
+  /* int j; */
+  char server_response[1024];
+  for(temp = buff; *temp != '&'; temp += 1){
+    //printf("temp: %c\n", *temp);
+   server_response[j] = *temp;
+   j++;
+  }
+  /* for(j = 0; j < 2; j++){ */
+  /*   server_response[j] = buff[i]; */
+  /* } */
+  printf("server_response: %s, len: %zu\n", server_response, strlen(server_response));
+  if(strncmp(server_response, "ok", strlen(server_response)) == 0){
+    mkdir_flag = 1;
+    return 0;
+  }
+  return -ENOENT;
+  /* if(mkdir(path, mode) == -1){ */
+  /*   printf("MKDIR Failed!\n"); */
+  /*   return -ENOENT; */
+  /* } */
+  
 }
 /* static int client_truncate(const char*, off_t){ */
 /*   return 0; */

@@ -18,10 +18,10 @@ clean:
 	rm -rf *~ *.o .*.swp "#*.c#" serverSNFS clientSNFS
 
 runserv:
-	./serverSNFS -port 55143 -mount ./serverDir
+	./serverSNFS -port 5143 -mount ./serverDir
 
 runcli:
-	./clientSNFS -port 55143 -hostname localhost -mount /tmp/hello1 -f
+	./clientSNFS -port 5143 -hostname localhost -mount /tmp/hello1 -f
 
 unm:
 	fusermount -u /tmp/hello
