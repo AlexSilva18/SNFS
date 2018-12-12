@@ -133,6 +133,33 @@ void do_read(char *inputPath, char *buffer, size_t size, off_t offset, int socke
 
 
 
+void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int socket_fd){
+	char* tempPath = (char*)malloc(500);
+
+	getPath(tempPath, inputPath);
+
+	int fd = open(tempPath, O_RDWR|O_CREAT, 0666);
+	
+	pwrite(fd, buffer, size, offset);
+	
+	printf("WriteBuffer: %s\n", buffer);
+	writeToServer(socket_fd, buffer, strlen(buffer));
+	
+	close(fd);
+	free(tempPath);
+	return;
+}
+
+void do_truncate(char* inputPath, off_t offset){
+	
+	int fd = open(inputPath, O_TRUNC | O_WRONLY);
+	ftruncate(fd, offset);
+	close(fd);
+	
+}
+
+
+
 
 /* void do_mkdir(char* inputPath, mode_t mode, int socket_fd){ */
 void do_mkdir(char* inputPath, int socket_fd){

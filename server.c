@@ -160,7 +160,20 @@ void * threadInit(void * args){
 
   printf("path: %s\n\n", path);
   
+  // DECLARATIONS FOR SWITCH STATEMENT
+  char strSize[10];
+  i = 0;
+  char* curPos = NULL;
+  int size = 0;
+  char strOffset[10];
+  int offset = 0;
+  //char strOffset[10];
+  char readBuffer[5000];
+  char writeBuffer[5000];
+  
   switch(operation){
+  
+// DO_GETATTR ==========================================================
   case 'g':
   	printf("do_getattr() called\n");
     if (do_getattr(path, socket_fd) == -1)
@@ -168,23 +181,27 @@ void * threadInit(void * args){
     memset(path, 0, sizeof(path));
     break;
     
+// DO_READDIR ==========================================================
   case 'e':
   	printf("do_readdir() called\n");
     do_readdir(path, socket_fd);
     break;
     
+// DO_READ ==========================================================
   case 'r':
   	printf("do_read() called\n");
+  	
 		// CODE TO FINISH READING BUFFER FROM SOCKET  	
   	// empty statement needed
-  	char* curPos = buff;
+		curPos = buff;
   	
+  	// SKIPS OPERATION AND PATH IN BUFF
   	while(*curPos != '&')
   		curPos++;
   		
   	curPos++;
-  	char strSize[10];
-  	int i = 0;
+  	bzero(strSize, strlen(strSize));
+  	i = 0;
   	
   	while(*curPos != '%'){
   		strSize[i] = *curPos;
@@ -192,11 +209,11 @@ void * threadInit(void * args){
   		curPos++;
   	}
   	
-  	int size;
+  	size = 0;
   	sscanf(strSize, "%d", &size);
   	curPos++;
   	
-  	char strOffset[10];
+  	bzero(strOffset, strlen(strOffset));
   	i = 0;
   	while(*curPos != '%'){
   		strOffset[i] = *curPos;
@@ -204,40 +221,122 @@ void * threadInit(void * args){
   		curPos++;
   	}
   	
-  	int offset;
+  	offset = 0;
   	sscanf(strOffset, "%d", &offset);
   	
   	printf("PATH: %s\n", path);
   	printf("SIZE: %s\n", strSize);
   	printf("OFFSET: %s\n", strOffset);
   	
-  	char readBuffer[5000];
+  	bzero(readBuffer, strlen(readBuffer));
   	
-    do_read(path, readBuffer, size, offset, socket_fd); //5 should be size
+    do_read(path, readBuffer, size, offset, socket_fd);
     break;
     
+// CO_CREATE ==========================================================
   case 'c':
     // do_create
     break;
+    
+// DO_OPENDIR ==========================================================
   case 'o':
     // do_open
+    printf("do_open() called");
     do_open(path);
     break;
+    
+// DO_WRITE ==========================================================
   case 'w':
-    // do_write
+  	printf("do_write() called\n");
+  	
+  	// CODE TO FINISH READING BUFFER FROM SOCKET  	
+  	// empty statement needed
+  	curPos = buff;
+  	
+  	// SKIPS OPERATION AND PATH IN BUFF
+  	while(*curPos != '&')
+  		curPos++;
+
+  	curPos++;
+  	bzero(strSize, strlen(strSize));
+  	
+  	i = 0;
+  	
+  	while(*curPos != '%'){
+  		strSize[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	
+  	size = 0;
+  	sscanf(strSize, "%d", &size);
+  	curPos++;
+  	
+  	bzero(strOffset, strlen(strOffset));
+  	i = 0;
+  	while(*curPos != '%'){
+  		strOffset[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	curPos++;
+  	
+  	offset = 0;
+  	sscanf(strOffset, "%d", &offset);
+  	
+  	i = 0;
+  	while(*curPos != '%'){
+  		writeBuffer[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	
+  	do_write(path, writeBuffer, size, offset, socket_fd);
+  	
     break;
+
+// DO_FLUSH ==========================================================
   case 'f':
     // do_flush
     break;
+    
+// DO_MKDIR ==========================================================
   case 'm':
+  	printf("do_mkdir() called");
     do_mkdir(path, socket_fd);
     break;
+
+// TRUNCATE ==========================================================
   case 't':
-    // do_trunkate
+  	printf("do_truncate() called\n");
+  	
+		// CODE TO FINISH READING BUFFER FROM SOCKET  	
+  	// empty statement needed
+		curPos = buff;
+  	
+  	// SKIPS OPERATION AND PATH IN BUFF
+  	while(*curPos != '&')
+  		curPos++;
+  		
+  	bzero(strOffset, strlen(strOffset));
+  	i = 0;
+  	while(*curPos != '%'){
+  		strOffset[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	
+  	offset = 0;
+  	sscanf(strOffset, "%d", &offset);
+  	
+  	do_truncate(path, offset);
     break;
+
+// DO_OPENDIR ==========================================================
   case 'p':
     // do_opendir
     break;
+// DO_RELEASEDIR ==========================================================
   case 'l':
     // do_releasedir
     break;

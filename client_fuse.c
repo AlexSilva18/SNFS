@@ -222,6 +222,7 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
  * @param struct fuse_file_info*
  * @return
  */
+ 
 static int client_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
   printf("[read] path == %s\n", path);
   
@@ -265,7 +266,7 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
 	read(global_socket, buff, 1024); 
 	printf("BUFFER: %s\n", buff);
   memcpy(buffer, buff, strlen(buff));
-  return strlen(buff)-offset;
+  return strlen(buff) - offset;
   
 /*
  	memcpy(buffer, selectedText + offset, size);
@@ -295,9 +296,60 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   else
     size = 0;
   */
-  
-  return strlen(buff) - offset;
 }
+
+static int client_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
+  printf("[write] path == %s\n", path);
+  
+  // ADD "w" AND PATH TO MESSAGE
+  char message[1024] = "w";
+  char* curPos = message;
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  curPos = &message[i];
+  curPos += 1;
+
+	// ADD SIZE TO MESSAGE
+  char strSize[10];
+  sprintf(strSize, "%d", ((int)size));
+  strcat(message, strSize);
+  curPos += strlen(strSize);
+  *curPos = '%';
+  curPos += 1;
+
+	// ADD OFFSET TO MESSAGE
+  char strOffset[10];
+  sprintf(strOffset, "%d", ((int)offset));
+  strcat(message, strOffset);
+  curPos += strlen(strOffset);
+  *curPos = '%';
+  curPos += 1;
+  
+  // ADD STRING TO BE WRITTEN
+  strcat(message, buffer);
+  curPos += strlen(buffer);
+  
+  *curPos = '%';
+  curPos += 1;
+  *curPos = '&';
+  
+  // message format for write: "w/path&size%offset%stringToWrite%&"
+  
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
+  
+  // READ BACK FROM SOCKET
+	char buff[1024];
+	read(global_socket, buff, 1024); 
+	printf("BUFFER: %s\n", buff);
+  //memcpy(buffer, buff, strlen(buff));
+  return strlen(buff)-offset;
+  
+}
+
 
 static int client_open(const char *path, struct fuse_file_info *fi){
   printf("[open] path == %s\n", path);
@@ -310,6 +362,52 @@ static int client_open(const char *path, struct fuse_file_info *fi){
 	*/
   return 0;
 }
+
+static int client_release(const char*path, struct fuse_file_info* fi){
+	return 0;
+}
+
+static int client_truncate(const char* path, off_t offset){
+	
+	// ADD "t" AND PATH TO MESSAGE
+  char message[1024] = "t";
+  char* curPos = message;
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  curPos = &message[i];
+  curPos += 1;
+  
+  // ADD OFFSET TO MESSAGE
+  char strOffset[10];
+  sprintf(strOffset, "%d", ((int)offset));
+  strcat(message, strOffset);
+  curPos += strlen(strOffset);
+  *curPos = '%';
+  curPos += 1;
+  
+  *curPos = '&';
+  
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
+  
+  return 0;
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 static int client_create(const char *path, mode_t mode, struct fuse_file_info *fi){
@@ -334,30 +432,6 @@ static int client_create(const char *path, mode_t mode, struct fuse_file_info *f
   return 0;
 }
 
-static int client_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
-  printf("[write] path == %s\n", path);
-  printf("\tdata: %s\n", buffer);
-
-  int fd;
-  (void)fi;
-  if(fi == NULL)
-    fd = open(path, O_WRONLY);
-  else
-    fd = fi->fh;
-  
-  if (fd == -1)
-    return -errno;
-  
-  int bytes_written = pwrite(fd, buffer, size, offset);
-  if(bytes_written == -1){
-    printf("Write Failed!\n");
-    return ENOSYS;
-  }
-  if (fi == NULL)
-    close(fd);
-
-  return bytes_written;
-}
 
 static int client_flush(const char *path, struct fuse_file_info *fi){
   printf("[flush] path == %s\n", path);
@@ -433,4 +507,6 @@ static struct fuse_operations fops = {
   /* .truncate = client_truncate, */
   /* .opendir = client_opendir, */
   .releasedir = client_releasedir,
+  .release = client_release,
+  .truncate = client_truncate,
 };

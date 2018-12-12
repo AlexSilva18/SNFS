@@ -36,5 +36,7 @@ static int client_mkdir(const char*, mode_t);
 /* static int client_truncate(const char*, off_t); */
 /* static int client_opendir(const char*, struct fuse_file_info*); */
 static int client_releasedir(const char*, struct fuse_file_info*);
+static int client_release(const char*, struct fuse_file_info*);
+static int client_truncate(const char*, off_t);
 
 #endif
