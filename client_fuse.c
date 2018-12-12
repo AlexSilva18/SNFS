@@ -1,5 +1,7 @@
 #include "client_fuse.h"
 #include "socket.c"
+#include <stdlib.h>
+
 
 /* static struct file_info {
   const char *filename;
@@ -7,8 +9,8 @@
   }finfo;
 */
 extern int global_socket;
-static const char *hello_str = "Hello Worlds!\n";
-static const char *hello_path = "/tmp/hello1";
+//static const char *hello_str = "Hello Worlds!\n";
+//static const char *hello_path = "/tmp/hello1";
 
 /** gets attributes from file
  * @param const char* path, path of the file which the system asked for its attributes
@@ -21,6 +23,7 @@ static int client_getattr( const char *path, struct stat *st){
   if(strncmp(path, "/.Trash", 7) == 0){
       return -1;
   }
+  
   char message[1024] = "g";
   strcat(message, path);
   int i = strlen(message);
@@ -31,9 +34,9 @@ static int client_getattr( const char *path, struct stat *st){
     return -1;
   }
 
-  char buff[1024];
+  char buff[5000];
   //ssize_t nbytes;
-  /*nbytes = */read(global_socket, buff, 1024);
+  /*nbytes = */read(global_socket, buff, 5000);
   char *temp = NULL;
   int j = 0;
   char server_path[1024];
@@ -42,6 +45,14 @@ static int client_getattr( const char *path, struct stat *st){
     server_path[j] = *temp;
     j++;
   }
+  
+  int k;
+  for(k = j; k < strlen(server_path); k++){
+  	server_path[k] = '\0';
+  }
+  
+  
+  printf("SERVERPATH: %s\n", server_path);  
 
   //printf("\nnbytes = %zu\n", nbytes);
   //printf("server_path: %s\n", server_path);
@@ -79,6 +90,7 @@ static int client_getattr( const char *path, struct stat *st){
   
   memset(st, 0, sizeof(struct stat));
   
+  
   if (strncmp(server_path, "/", strlen(path)) == 0 ){
   //if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
@@ -86,19 +98,24 @@ static int client_getattr( const char *path, struct stat *st){
     //printf("step1\n");
     //return 0;
   }
-  else if (strcmp(server_path, hello_path) == 0){
-    st->st_mode = S_IFREG | 0666;
+  else/* if (strcmp(server_path, hello_path) == 0)*/{
+    st->st_mode = S_IFREG | 0644;
     st->st_nlink = 1;
     st->st_size = 1024;
     //printf("step2\n");
     //st->st_size = strlen(hello_str);
     return 0;
   }
+  
+  /*
   //else if (strcmp(path+1, hello_path) == 0){
   else
-    res = -ENOENT;
+  	res = 0;
+    //res = -ENOENT;
+  */
 
   return res;
+  
 }
 
 /** shows the files and directories that reside in a specific directory (ls)
@@ -109,50 +126,89 @@ static int client_getattr( const char *path, struct stat *st){
  * @param struct fuse_file_info*
  * @return 
  */ 
+
+
+
 static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
   printf("[readdir] path == %s\n", path);
   
-  /* (void) offset; */
-  /* (void) fi; */
-  /* DIR *dir = opendir(path); */
-  /* struct dirent *read; */
-  /* if (dir == NULL){ */
-  /*   closedir(dir); */
-  /*   return -errno; */
-  /* } */
-  /* while ((read = readdir(dir)) != NULL){ */
-  /*   if (strcmp( path, "/" ) == 0 ) { */
-  /*     //printf("step1"); */
-  /*     if (strcmp(read->d_name, ".") == 0){ */
-  /* 	filler(buffer, ".", NULL, 0); // Current Directory */
-  /* 	continue; */
-  /*     } */
-  /*     else if (strcmp(read->d_name, "..") == 0){ */
-  /* 	filler(buffer, "..", NULL, 0); // Parent Directory */
-  /* 	continue; */
-  /*   st.st_ino = read->d_ino; */
-  /*   st.st_mode = read->d_type << 12; */
-  /*   if(filler(buffer, read->d_name, &st, 0)) */
-  /*     break; */
-  /* } */
-  // If the user is trying to show the files/directories of the root directory show the following
-  /* char *message = "message!"; */
-  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
-  /*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
-  /*   return -1; */
-  /* } */
-  (void) offset;
-  (void) fi;
+  filler(buffer, ".", NULL, 0); // Current Directory
+  filler(buffer, "..", NULL, 0); // Parent Directory
+  
+  if (strcmp( path, "/" ) == 0 ) {
+  
+		char message[1024] = "e";
+		strcat(message, path);
+		int i = strlen(message);
+		message[i] = '&';
+		if(writeToServer(global_socket, message, strlen(message)) == -1){
+		  fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+		  return -1;
+		}
+		
+		char buff[1024];
+		read(global_socket, buff, 1024);
+		printf("BUFFER: %s\n", buff);
+		
+		char* curChar = buff;
+		
+		while(*curChar != '&'){
+			char dirName[100];
+			char* dirChar = dirName;
+			
+			while(*curChar != '%'){
+				*dirChar = *curChar;
+				curChar++;
+				dirChar++;
+			}
+			curChar++;
+			filler(buffer, dirName, NULL, 0);
+			bzero(dirName, 100);
+		}
+		
+		
+		/* (void) offset; */
+		/* (void) fi; */
+		/* DIR *dir = opendir(path); */
+		/* struct dirent *read; */
+		/* if (dir == NULL){ */
+		/*   closedir(dir); */
+		/*   return -errno; */
+		/* } */
+		/* while ((read = readdir(dir)) != NULL){ */
+		/*   if (strcmp( path, "/" ) == 0 ) { */
+		/*     //printf("step1"); */
+		/*     if (strcmp(read->d_name, ".") == 0){ */
+		/* 	filler(buffer, ".", NULL, 0); // Current Directory */
+		/* 	continue; */
+		/*     } */
+		/*     else if (strcmp(read->d_name, "..") == 0){ */
+		/* 	filler(buffer, "..", NULL, 0); // Parent Directory */
+		/* 	continue; */
+		/*   st.st_ino = read->d_ino; */
+		/*   st.st_mode = read->d_type << 12; */
+		/*   if(filler(buffer, read->d_name, &st, 0)) */
+		/*     break; */
+		/* } */
+		// If the user is trying to show the files/directories of the root directory show the following
+		/* char *message = "message!"; */
+		/* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
+		/*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
+		/*   return -1; */
+		/* } */
+		(void) offset;
+		(void) fi;
+  
+  
 
-  if ( strcmp( path, "/" ) == 0 ) {
-    filler(buffer, ".", NULL, 0); // Current Directory
-    filler(buffer, "..", NULL, 0); // Parent Directory
+  
+  }
+    
     //filler(buffer, "hello1", NULL, 0);
     /* filler( buffer, "file1", NULL, 0 ); */
     /* filler( buffer, "file2", NULL, 0 ); */
-  }
-  else
-    return -ENOENT;
+  //else
+  //  return -ENOENT;
   /* closedir(dir); */
   printf("finish readdir\n");
   return 0;
@@ -168,6 +224,52 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
  */
 static int client_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
   printf("[read] path == %s\n", path);
+  
+  // SETUP MESSAGE TO SEND THROUGH SOCKET
+  char message[1024] = "r";
+  char* curPos = message;
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  curPos = &message[i];
+  curPos += 1;
+  char strSize[10];
+  sprintf(strSize, "%d", ((int)size));
+  strcat(message, strSize);
+  curPos += strlen(strSize);
+  *curPos = '%';
+  curPos += 1;
+  char strOffset[10];
+  sprintf(strOffset, "%d", ((int)offset));
+  strcat(message, strOffset);
+  curPos += strlen(strOffset);
+  *curPos = '%';
+  curPos += 1;
+  *curPos = '&';
+  
+  // message format for read: "r/path&size%offset%&"
+  
+  //printf("message %s, length: %zu\n", message, strlen(message));
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
+  
+	char buff[1024];
+	read(global_socket, buff, 1024);
+	printf("BUFFER: %s\n", buff);
+  memcpy(buffer, buff, size);
+  return strlen(buff)-offset;
+  
+/*
+ 	memcpy(buffer, selectedText + offset, size);
+ 	return strlen(selectedText) - offset;
+ 	
+ 	SELECTEDTEXT = WHAT WE READ FROM SOCKET
+*/
+  
+  
+  /*
   printf("\tdata: %s\n", buffer);
   
   size_t len;
@@ -186,18 +288,20 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   }
   else
     size = 0;
+  */
   
-  return size;
+  return strlen(buff) - offset;
 }
 
 static int client_open(const char *path, struct fuse_file_info *fi){
   printf("[open] path == %s\n", path);
+  /*
   if (strcmp(path + 1, hello_path) != 0)
     return -ENOENT;
   
   if ((fi->flags & 3) != O_RDONLY)
     return -EACCES;
-
+	*/
   return 0;
 }
 

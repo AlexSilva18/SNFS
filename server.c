@@ -94,8 +94,6 @@ int main(int argc, char* argv[]){
   }
   close(socket_fd); 
 
-
-  
   return 0;
 }
 
@@ -161,23 +159,67 @@ void * threadInit(void * args){
 
 
   printf("path: %s\n\n", path);
+  
   switch(operation){
   case 'g':
+  	printf("do_getattr() called\n");
     if (do_getattr(path, socket_fd) == -1)
       fprintf(stderr, "[ERROR] Unable to get_attr");
     memset(path, 0, sizeof(path));
     break;
+    
   case 'e':
-    // do_readdir()
+  	printf("do_readdir() called\n");
+    do_readdir(path, socket_fd);
     break;
+    
   case 'r':
-    // do_read()
+		// CODE TO FINISH READING BUFFER FROM SOCKET  	
+  	;// empty statement needed
+  	char* curPos = buff;
+  	
+  	while(*curPos != '&')
+  		curPos++;
+  		
+  	curPos++;
+  	char strSize[10];
+  	int i = 0;
+  	
+  	while(*curPos != '%')
+  		strSize[i] = *curPos;
+  		i++;
+  		curPos++;
+  	
+  	int size;
+  	sscanf(strSize, "%d", &size);
+  	curPos++;
+  	
+  	char strOffset[10];
+  	i = 0;
+  	while(*curPos != '%')
+  		strOffset[i] = *curPos;
+  		i++;
+  		curPos++;
+  	
+  	int offset;
+  	sscanf(strOffset, "%d", &offset);
+  	
+  	printf("PATH: %s\n", path);
+  	printf("SIZE: %s\n", strSize);
+  	printf("OFFSET: %s\n", strOffset);
+  	
+  	char readBuffer[5000];
+  	
+	printf("do_read() called\n");
+    do_read(path, readBuffer, size, offset, socket_fd);
     break;
+    
   case 'c':
     // do_create
     break;
   case 'o':
     // do_open
+    do_open(path);
     break;
   case 'w':
     // do_write
