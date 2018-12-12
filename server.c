@@ -174,8 +174,9 @@ void * threadInit(void * args){
     break;
     
   case 'r':
+  	printf("do_read() called\n");
 		// CODE TO FINISH READING BUFFER FROM SOCKET  	
-  	;// empty statement needed
+  	// empty statement needed
   	char* curPos = buff;
   	
   	while(*curPos != '&')
@@ -185,10 +186,11 @@ void * threadInit(void * args){
   	char strSize[10];
   	int i = 0;
   	
-  	while(*curPos != '%')
+  	while(*curPos != '%'){
   		strSize[i] = *curPos;
   		i++;
   		curPos++;
+  	}
   	
   	int size;
   	sscanf(strSize, "%d", &size);
@@ -196,10 +198,11 @@ void * threadInit(void * args){
   	
   	char strOffset[10];
   	i = 0;
-  	while(*curPos != '%')
+  	while(*curPos != '%'){
   		strOffset[i] = *curPos;
   		i++;
   		curPos++;
+  	}
   	
   	int offset;
   	sscanf(strOffset, "%d", &offset);
@@ -210,8 +213,7 @@ void * threadInit(void * args){
   	
   	char readBuffer[5000];
   	
-	printf("do_read() called\n");
-    do_read(path, readBuffer, size, offset, socket_fd);
+    do_read(path, readBuffer, size, offset, socket_fd); //5 should be size
     break;
     
   case 'c':

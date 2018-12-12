@@ -225,7 +225,7 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
 static int client_read( const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi ){
   printf("[read] path == %s\n", path);
   
-  // SETUP MESSAGE TO SEND THROUGH SOCKET
+  // ADD "r" AND PATH TO MESSAGE
   char message[1024] = "r";
   char* curPos = message;
   strcat(message, path);
@@ -233,12 +233,16 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   message[i] = '&';
   curPos = &message[i];
   curPos += 1;
+
+	// ADD SIZE TO MESSAGE
   char strSize[10];
   sprintf(strSize, "%d", ((int)size));
   strcat(message, strSize);
   curPos += strlen(strSize);
   *curPos = '%';
   curPos += 1;
+
+	// ADD OFFSET TO MESSAGE
   char strOffset[10];
   sprintf(strOffset, "%d", ((int)offset));
   strcat(message, strOffset);
@@ -249,16 +253,18 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   
   // message format for read: "r/path&size%offset%&"
   
+  // WRITE MESSAGE TO SOCKET
   //printf("message %s, length: %zu\n", message, strlen(message));
   if(writeToServer(global_socket, message, strlen(message)) == -1){
     fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
     return -1;
   }
   
+  // READ BACK FROM SOCKET
 	char buff[1024];
-	read(global_socket, buff, 1024);
+	read(global_socket, buff, 1024); 
 	printf("BUFFER: %s\n", buff);
-  memcpy(buffer, buff, size);
+  memcpy(buffer, buff, strlen(buff));
   return strlen(buff)-offset;
   
 /*
