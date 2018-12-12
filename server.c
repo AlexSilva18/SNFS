@@ -132,7 +132,7 @@ void * threadInit(void * args){
   while(1){
     printf("Awaiting new instructions\n");
     ssize_t nbytes;
-    bzero(buff, 1024);
+    bzero(buff, strlen(buff));
     if((nbytes = read(socket_fd, buff, 1024)) == 0){
       fprintf(stderr, "[Error], Unable to read\n");
       //return;
@@ -258,6 +258,8 @@ void * threadInit(void * args){
   		curPos++;
 
   	curPos++;
+  	
+  	// PULLS SIZE FROM MESSAGE
   	bzero(strSize, strlen(strSize));
   	
   	i = 0;
@@ -272,6 +274,7 @@ void * threadInit(void * args){
   	sscanf(strSize, "%d", &size);
   	curPos++;
   	
+  	// PULLS OFFSET FROM MESSAGE
   	bzero(strOffset, strlen(strOffset));
   	i = 0;
   	while(*curPos != '%'){
@@ -284,12 +287,17 @@ void * threadInit(void * args){
   	offset = 0;
   	sscanf(strOffset, "%d", &offset);
   	
+  	// PULLS STRING TO WRITE FROM MESSAGE
   	i = 0;
   	while(*curPos != '%'){
   		writeBuffer[i] = *curPos;
   		i++;
   		curPos++;
   	}
+  	
+  	printf("PATH: %s\n", path);
+  	printf("SIZE: %d\n", size);
+  	printf("OFFSET: %d\n", offset);
   	
   	do_write(path, writeBuffer, size, offset, socket_fd);
   	

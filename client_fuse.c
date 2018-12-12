@@ -263,7 +263,8 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   
   // READ BACK FROM SOCKET
 	char buff[1024];
-	read(global_socket, buff, 1024); 
+	bzero(buff, 1024);
+	read(global_socket, buff, size); 
 	printf("BUFFER: %s\n", buff);
   memcpy(buffer, buff, strlen(buff));
   return strlen(buff) - offset;
@@ -300,6 +301,7 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
 
 static int client_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
   printf("[write] path == %s\n", path);
+  printf("[buffer] = %s\n[size] = %zu\n[offset] = %zu\n", buffer, size, offset);
   
   // ADD "w" AND PATH TO MESSAGE
   char message[1024] = "w";
@@ -325,6 +327,7 @@ static int client_write(const char *path, const char *buffer, size_t size, off_t
   curPos += strlen(strOffset);
   *curPos = '%';
   curPos += 1;
+  printf("OFFSET IS: %s\n", strOffset);
   
   // ADD STRING TO BE WRITTEN
   strcat(message, buffer);
@@ -344,10 +347,10 @@ static int client_write(const char *path, const char *buffer, size_t size, off_t
   // READ BACK FROM SOCKET
 	char buff[1024];
 	read(global_socket, buff, 1024); 
-	printf("BUFFER: %s\n", buff);
-  //memcpy(buffer, buff, strlen(buff));
-  return strlen(buff)-offset;
-  
+	printf("RETURN BUFFER bytesWritten: %s\n", buff);
+	int bytesWritten;
+	sscanf(buff, "%d", &bytesWritten);
+  return bytesWritten;
 }
 
 

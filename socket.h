@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 struct addrinfo hints, *res, *r;
 int mode;
