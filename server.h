@@ -18,6 +18,8 @@ struct threadinput{
 
 int getFlag(char**, inputStream*);
 void *threadInit(void *);
+void getPath(char*, char*);
+
 int do_getattr(char*, int);
 void do_readdir(char*, int);
 void do_mkdir(char*, int);
