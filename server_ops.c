@@ -97,18 +97,6 @@ void do_read(char *inputPath, char *buffer, size_t size, off_t offset, int socke
 
 	getPath(tempPath, inputPath);
 	
-	/*
-	int fd = open(tempPath, O_RDWR, 0666);
-	
-	pread(fd, buffer, size, offset);
-	
-	printf("ReadBuffer: %s\n", buffer);
-	writeToServer(socket_fd, buffer, strlen(buffer));
-		
-	close(fd);
-	*/
-	
-	
 	struct stat path_stat;
 	stat(tempPath, &path_stat);
 	
@@ -136,47 +124,13 @@ void do_read(char *inputPath, char *buffer, size_t size, off_t offset, int socke
 	return;
 }
 
-/*
-  DIR *d;  
-  struct dirent *dir;
-  
-  d = opendir("./serverDir");
-  
-  if (d){
-    while ((dir = readdir(d)) != NULL){
-      if(strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
-	continue;
-      printf("%s\n", dir->d_name);
-    }
-    closedir(d);
-  }
-  else{	
-    fprintf(stderr, "[ERROR] Invalid path\n");
-  }
-  
-  return; 
-*/
-
 
 
 void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int socket_fd){
 	char* tempPath = (char*)malloc(500);
 
 	getPath(tempPath, inputPath);
-	
-	/*
-	int fd = open(tempPath, O_RDWR|O_CREAT, 0666);
-	
-	printf("BUFFER IN WRITE: %s\n", buffer);
-	pwrite(fd, buffer, size, offset);
-	
-	printf("WriteBuffer: %s\n", buffer);
-	char confMsg[] = "okay";
-	writeToServer(socket_fd, confMsg, strlen(confMsg));
-	close(fd);
-	*/
-	
-	
+		
 	struct stat path_stat;
 	stat(tempPath, &path_stat);
 	
@@ -198,8 +152,6 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 		char errMsg[] = "error";
 		writeToServer(socket_fd, errMsg, strlen(errMsg));
 	}
-	
-	
 	
 	free(tempPath);
 	return;

@@ -46,6 +46,7 @@ static int client_getattr( const char *path, struct stat *st){
     j++;
   }
   
+  // 
   int k;
   for(k = j; k < strlen(server_path); k++){
   	server_path[k] = '\0';
@@ -268,35 +269,6 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
 	printf("BUFFER: %s\n", buff);
   memcpy(buffer, buff, strlen(buff));
   return strlen(buff) - offset;
-  
-/*
- 	memcpy(buffer, selectedText + offset, size);
- 	return strlen(selectedText) - offset;
- 	
- 	SELECTEDTEXT = WHAT WE READ FROM SOCKET
-*/
-  
-  
-  /*
-  printf("\tdata: %s\n", buffer);
-  
-  size_t len;
-  (void) fi;
-
-  //if (strcmp(path + 1, finfo.filename) != 0 )
-  if (strcmp(path + 1, hello_path) != 0 )
-    return -ENOENT;
-
-  len = strlen(hello_str);
-  if (offset < len){
-    if (offset + size > len)
-      size = len - offset;
-    //memcpy(buffer, finfo.data + offset, size);
-    memcpy(buffer, hello_str + offset, size);
-  }
-  else
-    size = 0;
-  */
 }
 
 static int client_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
