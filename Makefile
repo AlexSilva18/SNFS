@@ -21,7 +21,7 @@ runserv:
 	./serverSNFS -port 123262 -mount ./serverDir
 
 runcli:
-	./clientSNFS -port 123262 -hostname localhost -mount /tmp/hello1 -f
+	./clientSNFS -port 123262 -hostname localhost -mount /tmp/hello20 -f
 
 makedir:
 	mkdir /tmp/hello

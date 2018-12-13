@@ -135,7 +135,7 @@ static int client_getattr( const char *path, struct stat *st){
     if(ans[0] == 'y' && ans[1] == 'd'){
       printf("STEP4\n");
       st->st_mode = S_IFDIR | 0755;
-      st->st_nlink = 1;
+      st->st_nlink = 2;
       st->st_size = 1024;
       mkdir_flag = 0;
       return res;
@@ -378,6 +378,7 @@ static int client_write(const char *path, const char *buffer, size_t size, off_t
   
   // READ BACK FROM SOCKET
 	char buff[1024];
+	bzero(buff, sizeof(buff));
 	read(global_socket, buff, 1024); 
 	printf("RETURN BUFFER bytesWritten: %s\n", buff);
 	int bytesWritten;
@@ -416,6 +417,7 @@ static int client_truncate(const char* path, off_t offset){
   // ADD OFFSET TO MESSAGE
   char strOffset[10];
   sprintf(strOffset, "%d", ((int)offset));
+  //sprintf(strOffset, "%ld", offset);
   strcat(message, strOffset);
   curPos += strlen(strOffset);
   *curPos = '%';
@@ -490,7 +492,8 @@ static int client_create(const char *path, mode_t mode, struct fuse_file_info *f
     return -ENOSYS;
   }  */  
   
-  return retval;
+  //return retval;
+  return 0;
 }
 
 
@@ -565,8 +568,6 @@ static int client_opendir(const char* path, struct fuse_file_info* fi){
 static int client_releasedir(const char *path, struct fuse_file_info *fi){
 	printf("[releasedir] path == %s\n", path);
   //struct dir_data *dir = (struct dir_data*) (uintptr_t) fi->fh;
-  (void) path;
-  close(fi->fh);
   //closedir(dir->dp);
   return 0;
 }

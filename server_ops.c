@@ -152,6 +152,7 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 	
 		printf("WriteBuffer: %s\n", buffer);
 		char bytesWritten[10];
+		bzero(bytesWritten, sizeof(bytesWritten));
 		sprintf(bytesWritten, "%d", nbytes);
 		
 		writeToServer(socket_fd, bytesWritten, strlen(bytesWritten));
@@ -166,11 +167,19 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 	return;
 }
 
+
+
 void do_truncate(char* inputPath, off_t offset){
+	char* tempPath = (char*)malloc(500);
+
+	getPath(tempPath, inputPath);
 	
-	int fd = open(inputPath, O_TRUNC | O_WRONLY);
+	//truncate(tempPath, offset);
+	int fd = open(tempPath, O_TRUNC | O_WRONLY);
 	ftruncate(fd, offset);
 	close(fd);
+	
+	free(tempPath);
 	
 }
 

@@ -366,6 +366,7 @@ void * threadInit(void * args){
   	while(*curPos != '&')
   		curPos++;
   		
+  	curPos++;
   	bzero(strOffset, strlen(strOffset));
   	i = 0;
   	while(*curPos != '%'){
