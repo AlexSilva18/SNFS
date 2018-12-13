@@ -157,7 +157,9 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 	
 		printf("BUFFER IN WRITE: %s\n", buffer);
 		//int nbytes = pwrite(fd, buffer, strlen(buffer)-offset, offset);
-		pwrite(fd, buffer, strlen(buffer), offset);
+		if(pwrite(fd, buffer, strlen(buffer), offset) == -1){
+			writeToServer(socket_fd, "0", strlen("0"));
+		}
 	
 		char bytesWritten[10];
 		bzero(bytesWritten, sizeof(bytesWritten));
