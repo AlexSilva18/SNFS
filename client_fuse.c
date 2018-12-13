@@ -529,10 +529,12 @@ static int client_mkdir(const char *path, mode_t mode){
 /* static int client_truncate(const char*, off_t){ */
 /*   return 0; */
 /* } */
-/* static int client_opendir(const char*, struct fuse_file_info*){ */
-/*   return 0; */
-/* } */
+static int client_opendir(const char* path, struct fuse_file_info* fi){ 
+	printf("[opendir] path == %s\n", path);
+	return 0; 
+} 
 static int client_releasedir(const char *path, struct fuse_file_info *fi){
+	printf("[releasedir] path == %s\n", path);
   //struct dir_data *dir = (struct dir_data*) (uintptr_t) fi->fh;
   (void) path;
   close(fi->fh);
@@ -540,28 +542,22 @@ static int client_releasedir(const char *path, struct fuse_file_info *fi){
   return 0;
 }
 
-//#ifdef HAVE_UTIMENSAT
 static int client_utimens(const char* path, const struct timespec ts[2]){
 	printf("[utimens] path == %s\n", path);
 	return 0;
 }
-//#endif
 
 static struct fuse_operations fops = {
   .getattr = client_getattr,
   .readdir = client_readdir,
   .read = client_read,
   .create = client_create,
-  //.opendir = client_opendir,
+  .opendir = client_opendir,
   .open = client_open,
   .write = client_write,
   .flush = client_flush,
   .mkdir = client_mkdir,
-//#ifdef HAVE_UTIMENSAT
   .utimens = client_utimens,
-//#endif
-  /* .truncate = client_truncate, */
-  /* .opendir = client_opendir, */
   .releasedir = client_releasedir,
   .release = client_release,
   .truncate = client_truncate,
