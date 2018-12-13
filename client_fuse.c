@@ -42,7 +42,10 @@ static int client_getattr( const char *path, struct stat *st){
 
   char buff[5000];
   //ssize_t nbytes;
-  /*nbytes = */read(global_socket, buff, 5000);
+  /*nbytes = */
+  
+  // READ BACK FROM SOCKET
+  read(global_socket, buff, 5000);
   char *temp = NULL;
   int j = 0;
   char server_path[1024];
@@ -58,7 +61,9 @@ static int client_getattr( const char *path, struct stat *st){
   	server_path[k] = '\0';
   }
   
-  char fileExists[100] = "n";
+  char fileExists[100];
+  bzero(fileExists, sizeof(fileExists));
+  strcpy(fileExists, "n");
   strcat(fileExists, path);
   i = strlen(fileExists);
   fileExists[i] = '&';
@@ -359,7 +364,8 @@ static int client_write(const char *path, const char *buffer, size_t size, off_t
   curPos += strlen(strOffset);
   *curPos = '%';
   curPos += 1;
-  printf("OFFSET IS: %s\n", strOffset);
+  printf("OFFSET d IS: %ld\n", offset);
+  printf("OFFSET s IS: %s\n", strOffset);
   
   // ADD STRING TO BE WRITTEN
   strcat(message, buffer);
@@ -383,6 +389,8 @@ static int client_write(const char *path, const char *buffer, size_t size, off_t
 	printf("RETURN BUFFER bytesWritten: %s\n", buff);
 	int bytesWritten;
 	sscanf(buff, "%d", &bytesWritten);
+	printf("WRITE FINISHED\n");
+	printf("BYTES WRITTEN: %d\n", bytesWritten);
   return bytesWritten;
 }
 

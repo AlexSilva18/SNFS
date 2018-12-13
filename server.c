@@ -323,6 +323,7 @@ void * threadInit(void * args){
   	printf("OFFSET: %d\n", offset);
   	
   	do_write(path, writeBuffer, size, offset, socket_fd);
+  	//printf("WRITE FINISHED\n");
   	
     break;
 

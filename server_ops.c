@@ -83,7 +83,7 @@ void do_readdir(char *inputPath, int socket_fd){
 			curPos++; 
 		}
 		*curPos = '&';
-		printf("listDirs: %s\n", listDirs);
+		//printf("listDirs: %s\n", listDirs);
 		writeToServer(socket_fd, listDirs, strlen(listDirs));
 		
 		closedir(d);
@@ -137,6 +137,8 @@ void do_read(char *inputPath, char *buffer, size_t size, off_t offset, int socke
 
 void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int socket_fd){
 	char* tempPath = (char*)malloc(500);
+	
+	printf("OFFSET d IS: %ld\n", offset);
 
 	getPath(tempPath, inputPath);
 	
@@ -145,15 +147,23 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 	
 	// IF IS FILE
 	if(S_ISREG(path_stat.st_mode) != 0){
+		
 		int fd = open(tempPath, O_RDWR|O_CREAT, 0666);
+		
+		int i = 0;
+		for(i = strlen(buffer); i < size; i++){
+			buffer[i] = '\0';
+		}
 	
 		printf("BUFFER IN WRITE: %s\n", buffer);
-		int nbytes = pwrite(fd, buffer, strlen(buffer)-offset, offset);
+		//int nbytes = pwrite(fd, buffer, strlen(buffer)-offset, offset);
+		pwrite(fd, buffer, strlen(buffer), offset);
 	
-		printf("WriteBuffer: %s\n", buffer);
 		char bytesWritten[10];
 		bzero(bytesWritten, sizeof(bytesWritten));
-		sprintf(bytesWritten, "%d", nbytes);
+		//sprintf(bytesWritten, "%d", nbytes);
+		
+		sprintf(bytesWritten, "%zu", size);
 		
 		writeToServer(socket_fd, bytesWritten, strlen(bytesWritten));
 		close(fd);
@@ -174,7 +184,6 @@ void do_truncate(char* inputPath, off_t offset){
 
 	getPath(tempPath, inputPath);
 	
-	//truncate(tempPath, offset);
 	int fd = open(tempPath, O_TRUNC | O_WRONLY);
 	ftruncate(fd, offset);
 	close(fd);
