@@ -25,7 +25,7 @@ int getFlag(char**, inputStream*);
 void *threadInit(void *);
 int do_getattr(char*, int);
 void do_readdir(char*, int);
-void do_mkdir(char*, int);
+void do_mkdir(char*, mode_t, int);
 void do_create(char*, mode_t, int);
 /* void do_mkdir(char*, mode_t, int); */
 

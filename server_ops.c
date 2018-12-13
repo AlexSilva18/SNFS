@@ -71,7 +71,7 @@ void do_readdir(char *inputPath, int socket_fd){
 			char dirName[500];
 			strcpy(dirName, dir->d_name);
 			curName = dir->d_name;
-			printf("dir: %s\n", dir->d_name);
+			//printf("dir: %s\n", dir->d_name);
 			tempPtr = curName;
 			
 			for(i = 0; i < strlen(curName); i++){
@@ -178,34 +178,41 @@ void do_truncate(char* inputPath, off_t offset){
 
 
 /* void do_mkdir(char* inputPath, mode_t mode, int socket_fd){ */
-void do_mkdir(char* inputPath, int socket_fd){
+void do_mkdir(char* inputPath, mode_t mode, int socket_fd){
   char* tempPath = (char*)malloc(500);
-  char *success = "ok&";
+  //char *success = "ok&";
   //chdir(path);
   getPath(tempPath, inputPath);
   printf("mkdir tempPath: %s\n", tempPath);
   //printf("%s  %s\n", path,inputPath);
   /* char newPath[50] = "./"; */
   /* strcat(newPath, inputPath); */
-  if(mkdir(tempPath, S_IRWXU) == -1){
-    fprintf(stderr, "[ERROR] Unable to Mkdir\n");
-    char *failed = "fa&";
-    printf("failed: %s len: %zu\n",failed, strlen(failed));
-    if(writeToServer(socket_fd, failed, strlen(failed)) == -1){
-      fprintf(stderr, "[ERROR] Failed to Write\n");
-    }
-    free(tempPath);
-    return;
+  int retval = mkdir(tempPath, mode);
+  char strRetval[10];
+  sprintf(strRetval, "%d", retval);
 
-  }
-  else{
-      //success[4] = '&';
-    printf("succes: %s len: %zu\n",success, strlen(success));
-      if(writeToServer(socket_fd, success, strlen(success)) == -1)
-	fprintf(stderr, "[ERROR] Failed to Write\n");
-      free(tempPath);
-      return;
-    }
+  if(retval == -1)
+    fprintf(stderr, "[ERROR] Unable to Mkdir\n");
+  
+  writeToServer(socket_fd, strRetval, strlen(strRetval));
+  free(tempPath);
+  /*  char *failed = "fa&"; */
+  /*   printf("failed: %s len: %zu\n",failed, strlen(failed)); */
+  /*   if(writeToServer(socket_fd, failed, strlen(failed)) == -1){ */
+  /*     fprintf(stderr, "[ERROR] Failed to Write\n"); */
+  /*   } */
+  /*   free(tempPath); */
+  /*   return; */
+
+  /* } */
+  /* else{ */
+  /*     //success[4] = '&'; */
+  /*   printf("succes: %s len: %zu\n",success, strlen(success)); */
+  /*     if(writeToServer(socket_fd, success, strlen(success)) == -1) */
+  /* 	fprintf(stderr, "[ERROR] Failed to Write\n"); */
+  /*     free(tempPath); */
+  /*     return; */
+  /*   } */
 }
 
 void do_create(char* inputPath, mode_t mode, int socket_fd){
@@ -215,9 +222,10 @@ void do_create(char* inputPath, mode_t mode, int socket_fd){
 	int retval = creat(tempPath, mode);
 	if(retval == -1)
 	  fprintf(stderr, "[ERROR], File Could not be Created\n");
+	
 	char strRetval[10];
 	sprintf(strRetval, "%d", retval);
-	
+	printf("strRetval: %s, RETVAL: %d\n",strRetval, retval);
 	writeToServer(socket_fd, strRetval, strlen(strRetval));
 	free(tempPath);
 }

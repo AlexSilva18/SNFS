@@ -334,7 +334,24 @@ void * threadInit(void * args){
 // DO_MKDIR ==========================================================
   case 'm':
   	printf("do_mkdir() called\n");
-    do_mkdir(path, socket_fd);
+	curPos = buff;
+  	
+  	// SKIPS OPERATION AND PATH IN BUFF
+  	while(*curPos != '&')
+  		curPos++;
+  		
+  	curPos++;
+  	bzero(modeBuffer, strlen(modeBuffer));
+  	i = 0;
+  	
+  	while(*curPos != '%'){
+  		modeBuffer[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	
+  	mode = strtol(modeBuffer, NULL, 8);
+	do_mkdir(path, mode, socket_fd);
     break;
 
 // TRUNCATE ==========================================================
@@ -377,6 +394,7 @@ void * threadInit(void * args){
   	break;
   default:
     fprintf(stderr, "[ERROR]: Invalid Command.\n");
+    break;
   }
 
   //printf("Resetting\n");

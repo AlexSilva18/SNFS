@@ -196,7 +196,7 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
   filler(buffer, ".", NULL, 0); // Current Directory
   filler(buffer, "..", NULL, 0); // Parent Directory
   
-  if (strcmp( path, "/" ) == 0 ) {
+  /* if (strcmp( path, "/" ) == 0 ) { */
   
 		char message[1024] = "e";
 		strcat(message, path);
@@ -263,7 +263,7 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
   
 
   
-  }
+  /* } */
     
     //filler(buffer, "hello1", NULL, 0);
     /* filler( buffer, "file1", NULL, 0 ); */
@@ -323,10 +323,10 @@ static int client_read( const char *path, char *buffer, size_t size, off_t offse
   }
   
   // READ BACK FROM SOCKET
-	char buff[1024];
-	bzero(buff, 1024);
-	read(global_socket, buff, size); 
-	printf("BUFFER: %s\n", buff);
+  char buff[1024];
+  bzero(buff, 1024);
+  read(global_socket, buff, size); 
+  printf("BUFFER: %s\n", buff);
   memcpy(buffer, buff, strlen(buff));
   return strlen(buff) - offset;
 }
@@ -473,7 +473,7 @@ static int client_create(const char *path, mode_t mode, struct fuse_file_info *f
 	read(global_socket, buff, 1024); 
   int retval = 0;
   sscanf(buff, "%d", &retval);
-  
+  printf("RETVAL: %d\n", retval);
   /* int ret; */
   /* if (S_ISREG(mode)){ */
   /*   ret = open(path, O_CREATE | O_EXCL | O_WRONLY, mode); */
@@ -502,34 +502,58 @@ static int client_mkdir(const char *path, mode_t mode){
   printf("[mkdir] path == %s\n", path);
 
   char message[1024] = "m";
+  /* strcat(message, path); */
+  /* int i = strlen(message); */
+  /* message[i] = '&'; */
+  char* curPos = message;
   strcat(message, path);
   int i = strlen(message);
   message[i] = '&';
+  curPos = &message[i];
+  curPos += 1;
+  
+  // ADD MODE TO MESSAGE
+  char modeStr[50];
+  sprintf(modeStr, "%o", mode);
+  strcat(message, modeStr);
+  curPos += strlen(modeStr);
+  *curPos = '%';
+  curPos += 1;
+  *curPos = '&';
   //printf("message %s, length: %zu\n", message, strlen(message));
   if(writeToServer(global_socket, message, strlen(message)) == -1){
     fprintf(stderr, "[ERROR], [mkdir] unable to write to server\n");
     return -1;
   }
   
+   // READ BACK FROM SOCKET
   char buff[1024];
-  //ssize_t nbytes;
-  read(global_socket, buff, 1024);
-  char *temp = NULL;
-  int j = 0;
-  /* int j; */
-  char server_response[1024];
-  for(temp = buff; *temp != '&'; temp += 1){
-    //printf("temp: %c\n", *temp);
-   server_response[j] = *temp;
-   j++;
-  }
-  server_response[2] = '\0';
-  //printf("server_response: %s, len: %zu\n", server_response, strlen(server_response));
-  if(strncmp(server_response, "ok", strlen(server_response)) == 0){
-    mkdir_flag = 1;
-    return 0;
-  }
-  return -1;
+  read(global_socket, buff, 1024); 
+  int retval = 0;
+  sscanf(buff, "%d", &retval);
+  return retval;
+  /* char buff[1024]; */
+  /* //ssize_t nbytes; */
+  /* read(global_socket, buff, 1024); */
+  /* char *temp = NULL; */
+  /* int j = 0; */
+  /* /\* int j; *\/ */
+  /* char server_response[1024]; */
+  /* for(temp = buff; *temp != '&'; temp += 1){ */
+  /*   //printf("temp: %c\n", *temp); */
+  /*  server_response[j] = *temp; */
+  /*  j++; */
+  /* } */
+  /* server_response[2] = '\0'; */
+
+  /* //printf("server_response: %s, len: %zu\n", server_response, strlen(server_response)); */
+  /* if(strncmp(server_response, "ok", strlen(server_response)) == 0){   */
+  /*   mkdir_flag = 1; */
+  /*   return 0; */
+  /* } */
+
+
+  /* return -1; */
 }
 /* static int client_truncate(const char*, off_t){ */
 /*   return 0; */
