@@ -1,5 +1,7 @@
-/* #include "socket.c" */
-/* #include "client_fuse.c" */
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #include "client.h"
 
 int main( int argc, char *argv[] ){  
@@ -63,7 +65,7 @@ int main( int argc, char *argv[] ){
   /*   fprintf(stderr, "[ERROR]: Unable to close file\n"); */
   /*   return 0; */
   /* } */
-  printf("SUCCESS\n");
+  /* printf("SUCCESS\n"); */
   //struct fuse_args args = FUSE_ARGS_INIT(fuse_argc, fuse_argv);
   
   return fuse_main(fuse_argc, fuse_argv, &fops, NULL);

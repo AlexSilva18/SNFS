@@ -1,3 +1,7 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #include "server.h"
 #include <dirent.h>
 
@@ -9,13 +13,17 @@ char* path = curPath;
 
 int do_getattr(char *path, int socket_fd){
   //char *is_root = "/&";
-  char not_root[1024];
-  strcpy(not_root, path);
-  strcat(not_root, "&");
+  char* tempPath = (char*)malloc(500);//malloc(sizeof(inputPath)+sizeof(*path)+1);
+  getPath(tempPath, path);
+  strcat(tempPath, "&");
+  /* char not_root[1024]; */
+  /* strcpy(not_root, path); */
+  /* strcat(not_root, "&"); */
 
   
   //printf("sending: %s\n", not_root);
-  if(writeToServer(socket_fd, not_root, strlen(not_root)) == -1)
+  //if(writeToServer(socket_fd, not_root, strlen(not_root)) == -1)
+  if(writeToServer(socket_fd, tempPath, strlen(tempPath)) == -1)
     return -1;
   //char *temp = NULL;
   //int i = 0;
@@ -46,7 +54,7 @@ void do_readdir(char *inputPath, int socket_fd){
 
 	char* tempPath = (char*)malloc(500);//malloc(sizeof(inputPath)+sizeof(*path)+1);
 	getPath(tempPath, inputPath);
-	
+	printf("readdir tempPath: %s\n", tempPath);
 	DIR* d;
 	struct dirent* dir;
 	d = opendir(tempPath);
@@ -63,6 +71,7 @@ void do_readdir(char *inputPath, int socket_fd){
 			char dirName[500];
 			strcpy(dirName, dir->d_name);
 			curName = dir->d_name;
+			printf("dir: %s\n", dir->d_name);
 			tempPtr = curName;
 			
 			for(i = 0; i < strlen(curName); i++){
@@ -130,7 +139,7 @@ void do_write(char *inputPath, char *buffer, size_t size, off_t offset, int sock
 	char* tempPath = (char*)malloc(500);
 
 	getPath(tempPath, inputPath);
-		
+	
 	struct stat path_stat;
 	stat(tempPath, &path_stat);
 	
@@ -172,9 +181,13 @@ void do_truncate(char* inputPath, off_t offset){
 void do_mkdir(char* inputPath, int socket_fd){
   char* tempPath = (char*)malloc(500);
   char *success = "ok&";
+  //chdir(path);
   getPath(tempPath, inputPath);
-
-  if(mkdir(tempPath, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == -1){
+  printf("mkdir tempPath: %s\n", tempPath);
+  //printf("%s  %s\n", path,inputPath);
+  /* char newPath[50] = "./"; */
+  /* strcat(newPath, inputPath); */
+  if(mkdir(tempPath, S_IRWXU) == -1){
     fprintf(stderr, "[ERROR] Unable to Mkdir\n");
     char *failed = "fa&";
     printf("failed: %s len: %zu\n",failed, strlen(failed));
@@ -198,8 +211,10 @@ void do_mkdir(char* inputPath, int socket_fd){
 void do_create(char* inputPath, mode_t mode, int socket_fd){
 	char* tempPath = (char*)malloc(500);
 	getPath(tempPath, inputPath);
+	printf("create tempPath: %s\n", tempPath);
 	int retval = creat(tempPath, mode);
-	
+	if(retval == -1)
+	  fprintf(stderr, "[ERROR], File Could not be Created\n");
 	char strRetval[10];
 	sprintf(strRetval, "%d", retval);
 	
@@ -253,18 +268,49 @@ void getPath(char* destPath, char* inputPath){
 void checkDirExists(char* inputPath, int socket_fd){
 	char* tempPath = (char*)malloc(500);
   getPath(tempPath, inputPath);
-  
-  DIR* dir = opendir(tempPath);
-  if(ENOENT == errno){
-  	errno = 0;
-  	char ans[2] = "n";
-  	writeToServer(socket_fd, ans, strlen(ans));
-  }
-  else{
-  	char ans[2] = "y";
-  	writeToServer(socket_fd, ans, strlen(ans));
-  	closedir(dir);
-  }
+
+  //DIR* dir = opendir(tempPath);
+  /* struct dirent*d; */
+
+  /* if (dir){ */
+  /*   while((d = readdir(dir))){ */
+  /*     if(strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0) */
+  /* 	continue; */
+  /*     printf("dir: %s\n", d->d_name); */
+  /*     if(d->d_type == DT_REG){ */
+  /* 	printf("FILE\n"); */
+  /*     } */
+  /*     else if (d->d_type == DT_DIR){ */
+  /* 	printf("DIR\n"); */
+  /*     } */
+  /*   } */
+  /* } */
+  /* if(ENOENT == errno){ */
+  /* 	errno = 0; */
+  /* 	char ans[2] = "n"; */
+  /* 	writeToServer(socket_fd, ans, strlen(ans)); */
+  /* } */
+  /* else{ */
+	struct stat path_stat;
+	stat(tempPath, &path_stat);
+	if(S_ISREG(path_stat.st_mode) != 0){
+	  char ans[3] = "yf";
+	  printf("FILE\n");
+	  writeToServer(socket_fd, ans, strlen(ans));
+	}
+	  
+	else if(S_ISDIR(path_stat.st_mode) != 0){
+	  char ans[3] = "yd";
+	  printf("DIR\n");
+	  writeToServer(socket_fd, ans, strlen(ans));
+	  }
+	  else{
+	    char ans[2] = "n";
+	    writeToServer(socket_fd, ans, strlen(ans));
+	  }
+	  
+  /* 	closedir(dir); */
+  /* } */
   free(tempPath);
   
 }

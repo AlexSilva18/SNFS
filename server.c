@@ -1,3 +1,6 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
 #include "server.h"
 #include "socket.c"
 #include "server_ops.c"
@@ -130,7 +133,7 @@ void * threadInit(void * args){
   char buff[1024];
   //char *buff = (char*)malloc(sizeof(char)*1024);
   while(1){
-    printf("Awaiting new instructions\n");
+    //printf("Awaiting new instructions\n");
     ssize_t nbytes;
     bzero(buff, strlen(buff));
     if((nbytes = read(socket_fd, buff, 1024)) == 0){
@@ -330,7 +333,7 @@ void * threadInit(void * args){
     
 // DO_MKDIR ==========================================================
   case 'm':
-  	printf("do_mkdir() called");
+  	printf("do_mkdir() called\n");
     do_mkdir(path, socket_fd);
     break;
 
@@ -376,7 +379,7 @@ void * threadInit(void * args){
     fprintf(stderr, "[ERROR]: Invalid Command.\n");
   }
 
-  printf("Resetting\n");
+  //printf("Resetting\n");
   memset(buff, 0, strlen(buff));
   /* strcpy(path, ""); */
   /* strcpy(buff, ""); */

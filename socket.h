@@ -1,3 +1,7 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #ifndef SOCKET_H
 #define SOCKET_H
 

@@ -1,3 +1,7 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #ifndef CLIENT_FUSE_H
 #define CLIENT_FUSE_H
 

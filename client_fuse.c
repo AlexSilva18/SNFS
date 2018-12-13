@@ -1,3 +1,7 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #include "client_fuse.h"
 #include "socket.c"
 #include <stdlib.h>
@@ -63,12 +67,11 @@ static int client_getattr( const char *path, struct stat *st){
     return -1;
   }
   
-  char ans[2];
-  read(global_socket, ans, 2);
-  
+  char ans[3];
+  read(global_socket, ans, 3);
   
   printf("SERVERPATH: %s\n", server_path);  
-
+  
   //printf("\nnbytes = %zu\n", nbytes);
   //printf("server_path: %s\n", server_path);
   
@@ -105,7 +108,7 @@ static int client_getattr( const char *path, struct stat *st){
   
   memset(st, 0, sizeof(struct stat));
   
-	if (strncmp(server_path, "/", strlen(path)) == 0 ){
+  if (strncmp(server_path, "/", strlen(path)) == 0 ){
 		printf("STEP1\n");
   //if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
@@ -115,7 +118,7 @@ static int client_getattr( const char *path, struct stat *st){
   }
   else if (strcmp(server_path, hello_path) == 0){
   	printf("STEP2\n");
-    st->st_mode = S_IFREG | 0644;
+    st->st_mode = S_IFREG | 0666;
     st->st_nlink = 1;
     st->st_size = 1024;
     //st->st_size = strlen(hello_str);
@@ -129,7 +132,8 @@ static int client_getattr( const char *path, struct stat *st){
   else{
     //res = 0;
     //if(mkdir_flag == 1){
-    if(ans[0] == 'y'){
+    if(ans[0] == 'y' && ans[1] == 'd'){
+      printf("STEP4\n");
       st->st_mode = S_IFDIR | 0755;
       st->st_nlink = 1;
       st->st_size = 1024;
@@ -137,7 +141,8 @@ static int client_getattr( const char *path, struct stat *st){
       return res;
     }
     else{
-      st->st_mode = S_IFREG | 0644;
+      printf("STEP5\n");
+      st->st_mode = S_IFREG | 0666;
       st->st_nlink = 1;
       st->st_size = 1024;
       return res;
@@ -398,7 +403,7 @@ static int client_release(const char*path, struct fuse_file_info* fi){
 }
 
 static int client_truncate(const char* path, off_t offset){
-	
+  printf("[truncate] path == %s\n", path);
 	// ADD "t" AND PATH TO MESSAGE
   char message[1024] = "t";
   char* curPos = message;

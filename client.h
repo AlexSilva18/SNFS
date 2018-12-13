@@ -1,3 +1,7 @@
+/**
+   Warren Ho | Alex Silva | Kimberly Russo
+ **/
+
 #ifndef CLIENT_H
 #define CLIENT_H
 

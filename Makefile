@@ -7,7 +7,7 @@ default: client server
 
 client: $(CLIENT_FILES)
 	$(COMPILER) $(FLAGS) $(CLIENT_FILES) -o clientSNFS `pkg-config fuse --cflags --libs`
-	@echo 'To run: ./clientSNFS -f /tmp/hello'
+	@echo 'To run: ./clientSNFS -port [port_number] -hostname localhost -mount [mount_point] -f'
 	@echo 'To unmount: fusermount -u /tmp/hello"'
 	@echo 'Make sure you create a hello directory in /tmp'
 
@@ -18,10 +18,13 @@ clean:
 	rm -rf *~ *.o .*.swp "#*.c#" serverSNFS clientSNFS
 
 runserv:
-	./serverSNFS -port 55162 -mount ./serverDir
+	./serverSNFS -port 512362 -mount ./serverDir
 
 runcli:
-	./clientSNFS -port 55162 -hostname localhost -mount /tmp/hello20 -f
+	./clientSNFS -port 512362 -hostname localhost -mount /tmp/hello1 -f
+
+makedir:
+	mkdir /tmp/hello
 
 unm:
 	fusermount -u /tmp/hello
