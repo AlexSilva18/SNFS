@@ -3,6 +3,7 @@
 
 #include "socket.h"
 #include <pthread.h>
+#include <errno.h>
 //#include "threads.h"
 
 typedef struct {
@@ -21,10 +22,12 @@ void *threadInit(void *);
 int do_getattr(char*, int);
 void do_readdir(char*, int);
 void do_mkdir(char*, int);
+void do_create(char*, mode_t, int);
 /* void do_mkdir(char*, mode_t, int); */
 
 
 // HELPER FUNCTIONS
 void getPath(char*, char*);
+void checkDirExists(char*, int);
 
 #endif

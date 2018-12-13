@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <string.h>
+#include <sys/time.h>
 
 struct dir_data {
    DIR *dp;
@@ -38,5 +40,6 @@ static int client_mkdir(const char*, mode_t);
 static int client_releasedir(const char*, struct fuse_file_info*);
 static int client_release(const char*, struct fuse_file_info*);
 static int client_truncate(const char*, off_t);
+static int client_utimens(const char* path, const struct timespec[2]);
 
 #endif

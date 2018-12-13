@@ -1,6 +1,7 @@
 #include "client_fuse.h"
 #include "socket.c"
 #include <stdlib.h>
+#include <time.h>
 
 
 /* static struct file_info {
@@ -9,6 +10,7 @@
   }finfo;
 */
 extern int global_socket;
+int mkdir_flag = 0;
 //static const char *hello_str = "Hello Worlds!\n";
 //static const char *hello_path = "/tmp/hello1";
 
@@ -46,11 +48,23 @@ static int client_getattr( const char *path, struct stat *st){
     j++;
   }
   
-  // 
+  // CLEANS UP server_path
   int k;
   for(k = j; k < strlen(server_path); k++){
   	server_path[k] = '\0';
   }
+  
+  char fileExists[100] = "n";
+  strcat(fileExists, path);
+  i = strlen(fileExists);
+  fileExists[i] = '&';
+  if(writeToServer(global_socket, fileExists, strlen(fileExists)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
+  
+  char ans[2];
+  read(global_socket, ans, 2);
   
   
   printf("SERVERPATH: %s\n", server_path);  
@@ -91,22 +105,63 @@ static int client_getattr( const char *path, struct stat *st){
   
   memset(st, 0, sizeof(struct stat));
   
-  
-  if (strncmp(server_path, "/", strlen(path)) == 0 ){
+	if (strncmp(server_path, "/", strlen(path)) == 0 ){
+		printf("STEP1\n");
   //if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
     st->st_nlink = 2;
     //printf("step1\n");
     //return 0;
   }
-  else/* if (strcmp(server_path, hello_path) == 0)*/{
+  else if (strcmp(server_path, hello_path) == 0){
+  	printf("STEP2\n");
     st->st_mode = S_IFREG | 0644;
     st->st_nlink = 1;
     st->st_size = 1024;
-    //printf("step2\n");
     //st->st_size = strlen(hello_str);
     return 0;
   }
+  //else if (strcmp(path+1, hello_path) == 0){
+  else if(ans[0] == 'n'){
+  	printf("STEP3\n");
+  	return -ENOENT;
+  }
+  else{
+    //res = 0;
+    //if(mkdir_flag == 1){
+    if(ans[0] == 'y'){
+      st->st_mode = S_IFDIR | 0755;
+      st->st_nlink = 1;
+      st->st_size = 1024;
+      mkdir_flag = 0;
+      return res;
+    }
+    else{
+      st->st_mode = S_IFREG | 0644;
+      st->st_nlink = 1;
+      st->st_size = 1024;
+      return res;
+    }
+    /* else{ */
+    /*   res = -ENOENT; */
+    /* } */
+  }
+  
+  /* if (strncmp(server_path, "/", strlen(path)) == 0 ){ */
+  /* //if (server_path == '/'){ */
+  /*   st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits */
+  /*   st->st_nlink = 2; */
+  /*   //printf("step1\n"); */
+  /*   //return 0; */
+  /* } */
+  /* else/\* if (strcmp(server_path, hello_path) == 0)*\/{ */
+  /*   st->st_mode = S_IFREG | 0644; */
+  /*   st->st_nlink = 1; */
+  /*   st->st_size = 1024; */
+  /*   //printf("step2\n"); */
+  /*   //st->st_size = strlen(hello_str); */
+  /*   return 0; */
+  /* } */
   
   /*
   //else if (strcmp(path+1, hello_path) == 0){
@@ -374,19 +429,45 @@ static int client_truncate(const char* path, off_t offset){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 static int client_create(const char *path, mode_t mode, struct fuse_file_info *fi){
   printf("[create] path == %s\n", path);
+  
+  // CONVERT MODE TO STRING
+  //char modeStr[50];
+  //sprintf(modeStr, "%o", mode);
+  //printf("MODE: %s\n", modeStr);
+  //printf("Mode: %o\n", mode);
+  //mode_t newMode = strtol(modeStr, NULL, 8);
+  //printf("NEWMODE: %o\n", newMode);
+  
+  // ADD "c" AND PATH TO MESSAGE
+  char message[1024] = "c";
+  char* curPos = message;
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  curPos = &message[i];
+  curPos += 1;
+  
+  // ADD MODE TO MESSAGE
+  char modeStr[50];
+  sprintf(modeStr, "%o", mode);
+  strcat(message, modeStr);
+  curPos += strlen(modeStr);
+  *curPos = '%';
+  curPos += 1;
+  *curPos = '&';
+  
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [getattr] unable to write to server\n");
+    return -1;
+  }
+  
+  // READ BACK FROM SOCKET
+	char buff[1024];
+	read(global_socket, buff, 1024); 
+  int retval = 0;
+  sscanf(buff, "%d", &retval);
   
   /* int ret; */
   /* if (S_ISREG(mode)){ */
@@ -399,12 +480,12 @@ static int client_create(const char *path, mode_t mode, struct fuse_file_info *f
   /* else */
   /*   ret = mknod(path, mode,  */
   
-  if((fi->fh = open(path, fi->flags, mode)) == -1){
+  /*if((fi->fh = open(path, fi->flags, mode)) == -1){
     printf("File Create Failed!\n");
     return -ENOSYS;
-  }    
+  }  */  
   
-  return 0;
+  return retval;
 }
 
 
@@ -414,46 +495,36 @@ static int client_flush(const char *path, struct fuse_file_info *fi){
 }
 static int client_mkdir(const char *path, mode_t mode){
   printf("[mkdir] path == %s\n", path);
-  /* struct fuse_data *data; */
-  /* data = malloc(sizeof(struct fuse_data)); */
-  /* data->path = path; */
-  /* data->mode = mode; */
 
-
-  /* char message[1024] = "m"; */
-  /* strcat(message, path); */
-  /* int i = strlen(message); */
-  /* message[i] = '&'; */
-  /* //printf("message %s, length: %zu\n", message, strlen(message)); */
-  /* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
-  /*   fprintf(stderr, "[ERROR], [mkdir] unable to write to server\n"); */
-  /*   return -1; */
-  /* } */
-  
-  /* char buff[1024]; */
-  /* //ssize_t nbytes; */
-  /* read(global_socket, buff, 1024); */
-  /* if(strncmp(buff, "mkdir&", 6)){ */
-    
-  /*   if(sendto(global_socket, data, sizeof(*data), 0, (struct sockaddr*) &sin, sizeof(sin))) == -1) */
-  /*     fprintf(stderr, "[ERROR], couldn't send struct\n"); */
-  /* } */
-  /* char *temp = NULL; */
-  /* int j = 0; */
-  /* char server_path[1024]; */
-  /* for(temp = buff; *temp != '&'; temp += 1){ */
-  /*   //printf("temp: %c\n", *temp); */
-  /*   server_path[j] = *temp; */
-  /*   j++; */
-  /* } */
-
-  
-  if(mkdir(path, mode) == -1){
-    printf("MKDIR Failed!\n");
-    return -ENOENT;
+  char message[1024] = "m";
+  strcat(message, path);
+  int i = strlen(message);
+  message[i] = '&';
+  //printf("message %s, length: %zu\n", message, strlen(message));
+  if(writeToServer(global_socket, message, strlen(message)) == -1){
+    fprintf(stderr, "[ERROR], [mkdir] unable to write to server\n");
+    return -1;
   }
   
-  return 0;
+  char buff[1024];
+  //ssize_t nbytes;
+  read(global_socket, buff, 1024);
+  char *temp = NULL;
+  int j = 0;
+  /* int j; */
+  char server_response[1024];
+  for(temp = buff; *temp != '&'; temp += 1){
+    //printf("temp: %c\n", *temp);
+   server_response[j] = *temp;
+   j++;
+  }
+  server_response[2] = '\0';
+  //printf("server_response: %s, len: %zu\n", server_response, strlen(server_response));
+  if(strncmp(server_response, "ok", strlen(server_response)) == 0){
+    mkdir_flag = 1;
+    return 0;
+  }
+  return -1;
 }
 /* static int client_truncate(const char*, off_t){ */
 /*   return 0; */
@@ -469,16 +540,26 @@ static int client_releasedir(const char *path, struct fuse_file_info *fi){
   return 0;
 }
 
+//#ifdef HAVE_UTIMENSAT
+static int client_utimens(const char* path, const struct timespec ts[2]){
+	printf("[utimens] path == %s\n", path);
+	return 0;
+}
+//#endif
 
 static struct fuse_operations fops = {
   .getattr = client_getattr,
   .readdir = client_readdir,
   .read = client_read,
   .create = client_create,
+  //.opendir = client_opendir,
   .open = client_open,
   .write = client_write,
   .flush = client_flush,
   .mkdir = client_mkdir,
+//#ifdef HAVE_UTIMENSAT
+  .utimens = client_utimens,
+//#endif
   /* .truncate = client_truncate, */
   /* .opendir = client_opendir, */
   .releasedir = client_releasedir,

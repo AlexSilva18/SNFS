@@ -170,6 +170,8 @@ void * threadInit(void * args){
   //char strOffset[10];
   char readBuffer[5000];
   char writeBuffer[5000];
+  char modeBuffer[50];
+  mode_t mode;
   
   switch(operation){
   
@@ -235,7 +237,25 @@ void * threadInit(void * args){
     
 // CO_CREATE ==========================================================
   case 'c':
-    // do_create
+  	printf("do_create() called\n");
+  	curPos = buff;
+  	
+  	// SKIPS OPERATION AND PATH IN BUFF
+  	while(*curPos != '&')
+  		curPos++;
+  		
+  	curPos++;
+  	bzero(modeBuffer, strlen(modeBuffer));
+  	i = 0;
+  	
+  	while(*curPos != '%'){
+  		modeBuffer[i] = *curPos;
+  		i++;
+  		curPos++;
+  	}
+  	
+  	mode = strtol(modeBuffer, NULL, 8);
+  	do_create(path, mode, socket_fd);
     break;
     
 // DO_OPENDIR ==========================================================
@@ -348,6 +368,10 @@ void * threadInit(void * args){
   case 'l':
     // do_releasedir
     break;
+    
+  case 'n':
+  	checkDirExists(path, socket_fd);
+  	break;
   default:
     fprintf(stderr, "[ERROR]: Invalid Command.\n");
   }

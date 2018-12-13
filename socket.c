@@ -2,6 +2,7 @@
 
 struct addrinfo *res;
 int global_socket = 0;
+char hello_path[1024];
 
 int socketInit(char *hostname, char *port){
   int rc;

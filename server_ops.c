@@ -170,29 +170,41 @@ void do_truncate(char* inputPath, off_t offset){
 
 /* void do_mkdir(char* inputPath, mode_t mode, int socket_fd){ */
 void do_mkdir(char* inputPath, int socket_fd){
-  /* char *path = "/tmp/hello1"; */
-  /* char* tempPath = (char*)malloc(sizeof(*inputPath)+sizeof(*path+1); */
-  /* getPath(tempPath, inputPath); */
-  /* char *conf = "mkdir&"; */
-  /* if(writeToServer(socket_fd, conf, strlen(conf)) == -1) */
-  /*     return -1; */
-  
-  /* struct fuse_data *data; */
-  /* recvfrom(socket_fd, data, sizeof(*data), 0, (struct sockaddr*)&sin, sizeof(sin)); */
-  /* printf("Reached here\n"); */
-  /* int retval = mkdir(tempPath, mode); */
-  /* if(retval == -1){ */
-  /*   fprintf(stderr, "[ERROR] Unable to Mkdir\n"); */
-  /*   if(writeToServer(socket_fd, not_root, strlen(not_root)) == -1) */
-  /*     return -1; */
-  /*   free(tempPath); */
-  /*   return; */
-  /* } */
-  
-  /* if(writeToServer(socket_fd, not_root, strlen(not_root)) == -1) */
-  /*   return -1; */
-  
-  /* free(tempPath); */
+  char* tempPath = (char*)malloc(500);
+  char *success = "ok&";
+  getPath(tempPath, inputPath);
+
+  if(mkdir(tempPath, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) == -1){
+    fprintf(stderr, "[ERROR] Unable to Mkdir\n");
+    char *failed = "fa&";
+    printf("failed: %s len: %zu\n",failed, strlen(failed));
+    if(writeToServer(socket_fd, failed, strlen(failed)) == -1){
+      fprintf(stderr, "[ERROR] Failed to Write\n");
+    }
+    free(tempPath);
+    return;
+
+  }
+  else{
+      //success[4] = '&';
+    printf("succes: %s len: %zu\n",success, strlen(success));
+      if(writeToServer(socket_fd, success, strlen(success)) == -1)
+	fprintf(stderr, "[ERROR] Failed to Write\n");
+      free(tempPath);
+      return;
+    }
+}
+
+void do_create(char* inputPath, mode_t mode, int socket_fd){
+	char* tempPath = (char*)malloc(500);
+	getPath(tempPath, inputPath);
+	int retval = creat(tempPath, mode);
+	
+	char strRetval[10];
+	sprintf(strRetval, "%d", retval);
+	
+	writeToServer(socket_fd, strRetval, strlen(strRetval));
+	free(tempPath);
 }
 
 /*
@@ -237,3 +249,26 @@ void getPath(char* destPath, char* inputPath){
 	
 	strcpy(destPath, strcat(servDir, inputPath));
 }
+
+void checkDirExists(char* inputPath, int socket_fd){
+	char* tempPath = (char*)malloc(500);
+  getPath(tempPath, inputPath);
+  
+  DIR* dir = opendir(tempPath);
+  if(ENOENT == errno){
+  	errno = 0;
+  	char ans[2] = "n";
+  	writeToServer(socket_fd, ans, strlen(ans));
+  }
+  else{
+  	char ans[2] = "y";
+  	writeToServer(socket_fd, ans, strlen(ans));
+  	closedir(dir);
+  }
+  free(tempPath);
+  
+}
+
+
+
+

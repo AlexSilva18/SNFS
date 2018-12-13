@@ -38,6 +38,9 @@ int main( int argc, char *argv[] ){
   }
 
   global_socket = socket_fd;
+  hello_path[1023] = '\0';
+  strncpy(hello_path, argv[6], sizeof(hello_path));
+  
   /* int fd = socketOpen(pathname); */
   /* if(fd == -1){ */
   /*   fprintf(stderr, "[ERROR]: File Descriptor not found\n"); */
