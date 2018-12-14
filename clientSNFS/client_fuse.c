@@ -3,7 +3,7 @@
  **/
 
 #include "client_fuse.h"
-#include "socket.c"
+#include "../serverSNFS/socket.c"
 #include <stdlib.h>
 #include <time.h>
 
@@ -77,33 +77,6 @@ static int client_getattr( const char *path, struct stat *st){
   
   printf("SERVERPATH: %s\n", server_path);  
   
-  //printf("\nnbytes = %zu\n", nbytes);
-  //printf("server_path: %s\n", server_path);
-  
-  
-  /* char buff[1024]; */
-  /* int nbytes; */
-  /* char *temp; */
-  /* char mess[1024]; */
-  /* nbytes = read(global_socket, buff, 50); */
-  /* int i = 0; */
-  /* for( temp = buff; *temp != '&'; temp+=1){ */
-  /*   mess[i]= *temp; */
-  /*   ++i; */
-  /* } */
-  /* mess[i+1] = '\0'; */
-  /* printf("\nnbytes = %d,  %s\n", nbytes, mess); */
-  /* printf("end\n"); */
-
-  /* (void) path; */
-  /* if (lstat(hello_path, st) == -1) */
-  /*   return -errno; */
-
-  /* if(strcmp(path, "/tmp")){ */
-  /*   printf("FOUND TEMP\n"); */
-  /* } */
-  /* return 0; */
-  
   int res = 0;
   
   st->st_uid = getuid(); // user ID of the process invoking the operation
@@ -114,7 +87,7 @@ static int client_getattr( const char *path, struct stat *st){
   memset(st, 0, sizeof(struct stat));
   
   if (strncmp(server_path, "/", strlen(path)) == 0 ){
-		printf("STEP1\n");
+    /* printf("STEP1\n"); */
   //if (server_path == '/'){
     st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits
     st->st_nlink = 2;
@@ -122,7 +95,7 @@ static int client_getattr( const char *path, struct stat *st){
     //return 0;
   }
   else if (strcmp(server_path, hello_path) == 0){
-  	printf("STEP2\n");
+  	/* printf("STEP2\n"); */
     st->st_mode = S_IFREG | 0666;
     st->st_nlink = 1;
     st->st_size = 1024;
@@ -131,14 +104,14 @@ static int client_getattr( const char *path, struct stat *st){
   }
   //else if (strcmp(path+1, hello_path) == 0){
   else if(ans[0] == 'n'){
-  	printf("STEP3\n");
+  	/* printf("STEP3\n"); */
   	return -ENOENT;
   }
   else{
     //res = 0;
     //if(mkdir_flag == 1){
     if(ans[0] == 'y' && ans[1] == 'd'){
-      printf("STEP4\n");
+      /* printf("STEP4\n"); */
       st->st_mode = S_IFDIR | 0755;
       st->st_nlink = 2;
       st->st_size = 1024;
@@ -146,39 +119,13 @@ static int client_getattr( const char *path, struct stat *st){
       return res;
     }
     else{
-      printf("STEP5\n");
+      /* printf("STEP5\n"); */
       st->st_mode = S_IFREG | 0666;
       st->st_nlink = 1;
       st->st_size = 1024;
       return res;
     }
-    /* else{ */
-    /*   res = -ENOENT; */
-    /* } */
   }
-  
-  /* if (strncmp(server_path, "/", strlen(path)) == 0 ){ */
-  /* //if (server_path == '/'){ */
-  /*   st->st_mode = S_IFDIR | 0755; // sets file system, file type and permission bits */
-  /*   st->st_nlink = 2; */
-  /*   //printf("step1\n"); */
-  /*   //return 0; */
-  /* } */
-  /* else/\* if (strcmp(server_path, hello_path) == 0)*\/{ */
-  /*   st->st_mode = S_IFREG | 0644; */
-  /*   st->st_nlink = 1; */
-  /*   st->st_size = 1024; */
-  /*   //printf("step2\n"); */
-  /*   //st->st_size = strlen(hello_str); */
-  /*   return 0; */
-  /* } */
-  
-  /*
-  //else if (strcmp(path+1, hello_path) == 0){
-  else
-  	res = 0;
-    //res = -ENOENT;
-  */
 
   return res;
   
@@ -192,9 +139,6 @@ static int client_getattr( const char *path, struct stat *st){
  * @param struct fuse_file_info*
  * @return 
  */ 
-
-
-
 static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi ){
   printf("[readdir] path == %s\n", path);
   
@@ -232,50 +176,10 @@ static int client_readdir( const char *path, void *buffer, fuse_fill_dir_t fille
 			bzero(dirName, 100);
 		}
 		
-		
-		/* (void) offset; */
-		/* (void) fi; */
-		/* DIR *dir = opendir(path); */
-		/* struct dirent *read; */
-		/* if (dir == NULL){ */
-		/*   closedir(dir); */
-		/*   return -errno; */
-		/* } */
-		/* while ((read = readdir(dir)) != NULL){ */
-		/*   if (strcmp( path, "/" ) == 0 ) { */
-		/*     //printf("step1"); */
-		/*     if (strcmp(read->d_name, ".") == 0){ */
-		/* 	filler(buffer, ".", NULL, 0); // Current Directory */
-		/* 	continue; */
-		/*     } */
-		/*     else if (strcmp(read->d_name, "..") == 0){ */
-		/* 	filler(buffer, "..", NULL, 0); // Parent Directory */
-		/* 	continue; */
-		/*   st.st_ino = read->d_ino; */
-		/*   st.st_mode = read->d_type << 12; */
-		/*   if(filler(buffer, read->d_name, &st, 0)) */
-		/*     break; */
-		/* } */
-		// If the user is trying to show the files/directories of the root directory show the following
-		/* char *message = "message!"; */
-		/* if(writeToServer(global_socket, message, strlen(message)) == -1){ */
-		/*   fprintf(stderr, "[ERROR], [getattr] unable to write to server"); */
-		/*   return -1; */
-		/* } */
 		(void) offset;
 		(void) fi;
   
-  
-
-  
-  /* } */
-    
-    //filler(buffer, "hello1", NULL, 0);
-    /* filler( buffer, "file1", NULL, 0 ); */
-    /* filler( buffer, "file2", NULL, 0 ); */
-  //else
-  //  return -ENOENT;
-  /* closedir(dir); */
+ 
   printf("finish readdir\n");
   return 0;
 }
@@ -484,22 +388,7 @@ static int client_create(const char *path, mode_t mode, struct fuse_file_info *f
   int retval = 0;
   sscanf(buff, "%d", &retval);
   printf("RETVAL: %d\n", retval);
-  /* int ret; */
-  /* if (S_ISREG(mode)){ */
-  /*   ret = open(path, O_CREATE | O_EXCL | O_WRONLY, mode); */
-  /*   if (ret >= 0) */
-  /*     ret = close(ret); */
-  /* } */
-  /* else if (S_ISFIFO(mode)) */
-  /*   ret = mkfifo(path, mode); */
-  /* else */
-  /*   ret = mknod(path, mode,  */
-  
-  /*if((fi->fh = open(path, fi->flags, mode)) == -1){
-    printf("File Create Failed!\n");
-    return -ENOSYS;
-  }  */  
-  
+
   //return retval;
   return 0;
 }
@@ -543,32 +432,7 @@ static int client_mkdir(const char *path, mode_t mode){
   int retval = 0;
   sscanf(buff, "%d", &retval);
   return retval;
-  /* char buff[1024]; */
-  /* //ssize_t nbytes; */
-  /* read(global_socket, buff, 1024); */
-  /* char *temp = NULL; */
-  /* int j = 0; */
-  /* /\* int j; *\/ */
-  /* char server_response[1024]; */
-  /* for(temp = buff; *temp != '&'; temp += 1){ */
-  /*   //printf("temp: %c\n", *temp); */
-  /*  server_response[j] = *temp; */
-  /*  j++; */
-  /* } */
-  /* server_response[2] = '\0'; */
-
-  /* //printf("server_response: %s, len: %zu\n", server_response, strlen(server_response)); */
-  /* if(strncmp(server_response, "ok", strlen(server_response)) == 0){   */
-  /*   mkdir_flag = 1; */
-  /*   return 0; */
-  /* } */
-
-
-  /* return -1; */
 }
-/* static int client_truncate(const char*, off_t){ */
-/*   return 0; */
-/* } */
 static int client_opendir(const char* path, struct fuse_file_info* fi){ 
 	printf("[opendir] path == %s\n", path);
 	return 0; 

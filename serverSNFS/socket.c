@@ -49,38 +49,7 @@ int socketOpen(const char *pathname){
   }
   printf("\nnbytes = %d,  %s\n", nbytes, mess);
   printf("end\n");
-  /* char string[24 + strlen(pathname)]; */
-  /* sprintf(string, "open %d %d %s %d\n", mode, (int)strlen(pathname), pathname, O_RDWR); */
-  /* if(writeToServer(socket_fd, string, strlen(string)) == -1) */
-  /*   return -1; */
-  
-  /* nbytes = read(socket_fd, buff, 50); */
-  
-  /* if(buff[0] == 'e'){ */
-  /*   return processError(socket_fd, buff, nbytes); */
-  /* } */
 
-  /* int i; */
-  /* int state = 0; */
-  /* do{ */
-  /*   buff[nbytes] = '\0'; */
-  /*   for(i = 0; i < nbytes; i++){ */
-  /*     if(state == 0){ */
-  /* 	if(isdigit(buff[i])) */
-  /* 	  state = 1; */
-  /*     } */
-  /*     if(state == 1){ */
-  /* 	state = parseInt(&fd, buff, i, state); */
-  /*     } */
-  /*     if(buff[i] == EOF){ */
-  /* 	break; */
-  /*     } */
-  /*   } */
-  /*   if(buff[i] == EOF) */
-  /*     break; */
-  /* } while((nbytes = read(socket_fd, buff, 50))); */
-  /* close(socket_fd); */
-  /* return -fd; */
   return -socket_fd;
 }
 

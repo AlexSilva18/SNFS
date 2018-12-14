@@ -77,14 +77,7 @@ int main(int argc, char* argv[]){
     }
     else
       memset(buff, 0, sizeof(buff));
-    /* printf("Connection has been made\n"); */
-    /* read(connection_id, buff, 50); */
-    /* printf("nbytes: %zu, %s\n", strlen(buff), buff); */
-    /* char string[30]; */
-    /* char nullb = '&'; */
-    /* sprintf(string, "confirmed message: %s%c",buff, nullb);  */
-    /* if(writeToServer(connection_id, string, strlen(string)) == -1) */
-    /*   return -1; */
+
     input = malloc(sizeof(struct threadinput));
     input->clientaddr = client_addr;
     input->socket_fd = connection_id;
@@ -399,15 +392,7 @@ void * threadInit(void * args){
     break;
   }
 
-  //printf("Resetting\n");
   memset(buff, 0, strlen(buff));
-  /* strcpy(path, ""); */
-  /* strcpy(buff, ""); */
   }
   return NULL;
-  /* char string[30]; */
-  /* char nullb = '&'; */
-  /* sprintf(string, "conf: %s%c",buff, nullb); */
-  /* if(writeToServer(connection_id, string, strlen(string)) == -1) */
-  /*   return -1; */
 }

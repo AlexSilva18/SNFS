@@ -42,32 +42,7 @@ int main( int argc, char *argv[] ){
   global_socket = socket_fd;
   hello_path[1023] = '\0';
   strncpy(hello_path, argv[6], sizeof(hello_path));
-  
-  /* int fd = socketOpen(pathname); */
-  /* if(fd == -1){ */
-  /*   fprintf(stderr, "[ERROR]: File Descriptor not found\n"); */
-  /*   return 0; */
-  /* } */
-  /* char buff[501]; */
-  /* int bytes_read; */
-  /* bytes_read = socketRead(fd, buff, 50); */
-  /* printf("Read: %d bytes, %s\n", bytes_read, buff); */
-  /* int bytes_written; */
-  /* bytes_written = socketWrite(fd, buff, bytes_read); */
-  /* printf("Written: %d bytes, %s\n", bytes_written, buff); */
-  /* int bytes_read; */
-  /* bytes_read = socketRead(fd, buff, 50); */
-  /* printf("Read: %d bytes, %s\n", bytes_read, buff); */
-  /* int bytes_written; */
-  /* bytes_written = socketWrite(fd, buff, bytes_read); */
-  /* printf("Written: %d bytes, %s\n", bytes_written, buff); */
-  /* if(socketClose(fd) == -1){ */
-  /*   fprintf(stderr, "[ERROR]: Unable to close file\n"); */
-  /*   return 0; */
-  /* } */
-  /* printf("SUCCESS\n"); */
-  //struct fuse_args args = FUSE_ARGS_INIT(fuse_argc, fuse_argv);
-  
+    
   return fuse_main(fuse_argc, fuse_argv, &fops, NULL);
 }
 
