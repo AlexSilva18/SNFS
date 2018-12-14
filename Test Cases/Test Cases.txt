@@ -1,0 +1,24 @@
+Single Client:
+touch file.txt
+touch file2
+mkdir newDir
+echo writingToFile > file.txt
+cat file.txt
+cp file.txt ./newDir
+cd ./newDir
+ls
+vim file.txt
+mkdir dir1; cd dir1; mkdir dir2; cd dir2; touch file3; echo sendmetofile1 > file3; cat file3; cat file3 > ../../../file2; cd ../../../; cat file2
+mkdir newDir/dir1/dir2/ newDir3; cp file2 ./newDir/dir1/dir2/newDir3/; cat ./newDir/dir1/dir2/newDir3/file2
+
+Multi Client:
+(client1) mkdir multiDir 
+(client2) cd multiDir
+(client3) cp file2 ./multiDir/
+(client2) ls
+(client3) cd multiDir/; mkdir new
+(client2) cd new/; touch file4
+(client1) cat file2 > ./multiDir/new/file5; cat ./multiDir/new/file5
+(client1) echo newString > ./multiDir/new/file5
+(client2) cat file5 > ../file2
+(client3) cat file2
